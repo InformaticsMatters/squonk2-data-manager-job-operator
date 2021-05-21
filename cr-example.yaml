@@ -1,0 +1,13 @@
+---
+kind: DataManagerJob
+apiVersion: squonk.it/v1
+metadata:
+  name: experimental-job
+  namespace: data-manager-api
+spec:
+  image: python:3.9.5-alpine3.13
+  command: python --version
+  taskId: task-db65b20c-0d5b-42b9-bfc0-7a5e90316f66
+  debug: no
+  project:
+    id: project-db65b20c-0d5b-42b9-bfc0-7a5e90316f66

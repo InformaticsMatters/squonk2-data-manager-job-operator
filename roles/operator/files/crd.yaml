@@ -1,0 +1,78 @@
+---
+kind: CustomResourceDefinition
+apiVersion: apiextensions.k8s.io/v1
+metadata:
+  name: datamanagerjobs.squonk.it
+  annotations:
+    data-manager.informaticsmatters.com/application: 'yes'
+spec:
+  conversion:
+    strategy: None
+  group: squonk.it
+  names:
+    kind: DataManagerJob
+    listKind: DataManagerJobList
+    plural: datamanagerjobs
+    singular: datamanagerjob
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              debug:
+                type: boolean
+                description: >-
+                  Set this to prevent the operator from automatically
+                  deleting the corresponding Job and its Pod when the
+                  Job finishes. The Pod wil remain, allowing a developer
+                  to debug its behaviour. The Job and Pod will need to
+                  be deleted manually to avoid filling the namespace with
+                  completed Jobs and Pods.
+              image:
+                type: string
+              command:
+                type: string
+              taskId:
+                type: string
+              projectMount:
+                type: string
+              resources:
+                type: object
+                properties:
+                  limits:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      storage:
+                        type: string
+                  requests:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      storage:
+                        type: string
+              securityContext:
+                type: object
+                properties:
+                  runAsUser:
+                    type: integer
+                  runAsGroup:
+                    type: integer
+                  fsGroup:
+                    type: integer
+              project:
+                type: object
+                properties:
+                  claimName:
+                    type: string
+                  id:
+                    type: string

@@ -1,0 +1,27 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: {{ jo_dmapi_namespace }}
+  name: jobs-operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      application: jobs-operator
+  template:
+    metadata:
+      labels:
+        application: jobs-operator
+    spec:
+      serviceAccountName: jobs-account
+      containers:
+      - name: jobs-operator
+        image: {{ jo_image }}:{{ jo_image_tag }}
+{% if jo_image_tag in ['stable', 'latest'] %}
+        imagePullPolicy: Always
+{% else %}
+        imagePullPolicy: Always
+{% endif %}
