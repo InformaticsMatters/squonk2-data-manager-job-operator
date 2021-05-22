@@ -9,7 +9,7 @@
 
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/informaticsmatters/data-manager-job-operator?include_prereleases)
 
-This repo contains a Kubernetes _Operator_ based on the [kopf] and [kubernetes]
+This repo contains a Kubernetes [Operator] based on the [kopf] and [kubernetes]
 Python packages that is used by the **Informatics Matters Data Manager API**
 to create transient Jobs for the Data Manager service.
 
@@ -63,3 +63,4 @@ To remove the operator (assuming there are no operator-derived instances)...
 [ansible galaxy]: https://galaxy.ansible.com
 [kopf]: https://pypi.org/project/kopf/
 [kubernetes]: https://pypi.org/project/kubernetes/
+[operator]: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
