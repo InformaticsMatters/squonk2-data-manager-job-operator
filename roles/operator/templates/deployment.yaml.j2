@@ -23,5 +23,5 @@ spec:
 {% if jo_image_tag in ['stable', 'latest'] %}
         imagePullPolicy: Always
 {% else %}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
 {% endif %}

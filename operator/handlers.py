@@ -1,5 +1,5 @@
-import time
-from typing import Any, Dict, List, Optional
+import shlex
+from typing import Any, Dict, List
 
 import kopf
 import kubernetes
@@ -69,9 +69,11 @@ def create(name, namespace, spec, logger, **_):
     image_tag: str = 'latest' if len(image_parts) == 1 else image_parts[1]
     image_pull_policy: str = 'Always' if image_tag.lower() in ['latest', 'stable'] else 'IfNotPresent'
 
-    # The image command is an array
-    # For now just split based on space,
-    command_items = command.split()
+    # The Kubernetes image command is an array.
+    # The supplied command is a string.
+    # For now split using Python shlex module - i.e. one that honours quotes.
+    # i.e. 'echo "Hello, world"' becomes ['echo', 'Hello, world']
+    command_items = shlex.split(command)
 
     # Security options
     sc_run_as_user = spec.get('securityContext', {})\
