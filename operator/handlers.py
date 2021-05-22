@@ -1,3 +1,5 @@
+"""A kopf handler for the DataManagerJob CRD.
+"""
 import shlex
 from typing import Any, Dict, List
 
@@ -39,6 +41,14 @@ default_fs_group = 1001
 
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
 def create(name, namespace, spec, logger, **_):
+    """Hanlder for CRD create events.
+    Here we construct the required Kubernetes objects,
+    adopting them in kopf before using the corresponding Kubernetes API
+    to create them.
+
+    We handle errors typically raising 'kopf.PermanentError' to prevent
+    Kubernetes constantly calling back for a given create.
+    """
 
     # A PermanentError is raised for any 'don not try this again' problems.
     # There are mandatory properties, that cannot have defaults...
@@ -67,7 +77,8 @@ def create(name, namespace, spec, logger, **_):
     # all others are 'IfNotPresent'
     image_parts: List[str] = image.split(':')
     image_tag: str = 'latest' if len(image_parts) == 1 else image_parts[1]
-    image_pull_policy: str = 'Always' if image_tag.lower() in ['latest', 'stable'] else 'IfNotPresent'
+    image_pull_policy: str = 'Always' if image_tag.lower() in ['latest', 'stable']\
+        else 'IfNotPresent'
 
     # The Kubernetes image command is an array.
     # The supplied command is a string.

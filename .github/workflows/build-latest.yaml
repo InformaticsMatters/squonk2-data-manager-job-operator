@@ -42,6 +42,7 @@ jobs:
         ansible-galaxy install -r requirements.yaml
     - name: Lint
       run: |
+        pylint operator/*.py
         yamllint .
         find . -type f -name '*.yaml.j2' -exec yamllint {} +
         ansible-lint
