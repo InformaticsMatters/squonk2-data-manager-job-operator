@@ -30,7 +30,7 @@ The following will build an operator image with the tag `1.0.0-alpha.1`: -
     $ docker-compose build
 
 ## Deploying into the Data Manager API
-We use [Ansible] 3 and community modules in [Ansible Galaxy] as the deployment
+We use [Ansible] 4 and community modules in [Ansible Galaxy] as the deployment
 mechanism, using the `operator` Ansible role in this repository and a
 Kubernetes config (KUBECONFIG). All of this is done via a suitable Python
 environment using the requirements in the root of the project...
@@ -59,5 +59,7 @@ To remove the operator (assuming there are no operator-derived instances)...
 
 ---
 
+[ansible]: https://pypi.org/project/ansible/
+[ansible galaxy]: https://galaxy.ansible.com
 [kopf]: https://pypi.org/project/kopf/
 [kubernetes]: https://pypi.org/project/kubernetes/
