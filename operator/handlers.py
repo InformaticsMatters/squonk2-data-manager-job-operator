@@ -24,7 +24,7 @@ POD_DEBUG_LABEL: str = POD_BASE_LABEL + '/debug'
 
 # The purpose?
 # Here everything's a 'JOB'
-POD_PURPOSE_LABEL_VALUE: str = 'JOB'
+POD_PURPOSE_LABEL_VALUE: str = 'INSTANCE'
 
 # The application SA
 SA = 'data-manager-app'
