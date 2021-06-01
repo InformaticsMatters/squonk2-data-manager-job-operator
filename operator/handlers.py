@@ -14,7 +14,7 @@ POD_BASE_LABEL: str = 'data-manager.informaticsmatters.com'
 POD_PURPOSE_LABEL: str = POD_BASE_LABEL + '/purpose'
 # A label that identifies instance ID for the Pod.
 # Only present if the Pod has a purpose label.
-POD_INSTANCE_LABEL: str = POD_BASE_LABEL + '/instance'
+POD_INSTANCE_LABEL: str = POD_BASE_LABEL + '/instance-id'
 # A label that identifies the instance as a DataManagerJob.
 # The value is unimportant (but it's 'yes')
 # If the label is not present, or is 'no' the instance is not
