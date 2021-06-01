@@ -17,7 +17,7 @@ rules:
   verbs: [create, patch]
 # Application: read-only access for watching cluster-wide.
 - apiGroups: [squonk.it]
-  resources: [jobs]
+  resources: [datamanagerjobs]
   verbs: [list, watch]
 
 ---
@@ -33,7 +33,7 @@ rules:
   verbs: [create]
 # Application: watching & handling for the custom resource we declare.
 - apiGroups: [squonk.it]
-  resources: [jobs]
+  resources: [datamanagerjobs]
   verbs: [list, watch, patch]
 # Application: other resources it produces and manipulates.
 # Here, we create Jobs+PVCs+Pods, but we do not patch/update/delete them ever.
@@ -41,7 +41,7 @@ rules:
   resources: [jobs]
   verbs: [create]
 - apiGroups: [apps, extensions, '']
-  resources: [pods, persistentvolumeclaims, deployments, configmaps, services, ingresses]
+  resources: [pods]
   verbs: [create]
 
 ---
