@@ -12,9 +12,14 @@ POD_BASE_LABEL: str = 'data-manager.informaticsmatters.com'
 # A label that identifies the purpose of the pod (task),
 # typically one of 'instance', 'dataset', 'file' and 'job'.
 POD_PURPOSE_LABEL: str = POD_BASE_LABEL + '/purpose'
-# A label that identifies task ID for the Pod.
+# A label that identifies instance ID for the Pod.
 # Only present if the Pod has a purpose label.
 POD_INSTANCE_LABEL: str = POD_BASE_LABEL + '/instance'
+# A label that identifies the instance as a DataManagerJob.
+# The value is unimportant (but it's 'yes')
+# If the label is not present, or is 'no' the instance is not
+# that of a DataManagerJob.
+POD_INSTANCE_IS_JOB: str = POD_BASE_LABEL + '/instance-is-job'
 # A label that identifies task ID for the Pod.
 # Only present if the Pod has a purpose label.
 POD_TASK_ID_LABEL: str = POD_BASE_LABEL + '/task-id'
@@ -123,6 +128,7 @@ def create(name, namespace, spec, logger, **_):
                     'labels': {
                         POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE,
                         POD_INSTANCE_LABEL: name,
+                        POD_INSTANCE_IS_JOB: 'yes',
                         POD_TASK_ID_LABEL: task_id
                     }
                 },
