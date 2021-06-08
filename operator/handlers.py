@@ -44,6 +44,24 @@ default_group_id = 1001
 default_fs_group = 1001
 
 
+# The Nextflow kubernetes config file.
+# A ConfigMap written into the directory '$HOME/data-manager.config'
+nextflow_config = """
+process {
+  pod = [nodeSelector: 'informaticsmatters.com/purpose-worker=yes']
+}
+executor {
+  name = 'k8s'
+}
+k8s {
+  serviceAccount = '%(sa)s'
+  storageMountPath = '/data'
+  storageClaimName = '%(claim_name)s'
+  storageSubPath = '%(project_id)s'
+  workDir = '/data'
+}
+"""
+
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
 def create(name, namespace, spec, logger, **_):
     """Hanlder for CRD create events.
@@ -55,7 +73,7 @@ def create(name, namespace, spec, logger, **_):
     Kubernetes constantly calling back for a given create.
     """
 
-    # A PermanentError is raised for any 'don not try this again' problems.
+    # A PermanentError is raised for any 'do not try this again' problems.
     # There are mandatory properties, that cannot have defaults...
     if not name:
         raise kopf.PermanentError('The object must have a name')
@@ -116,6 +134,40 @@ def create(name, namespace, spec, logger, **_):
     project_claim_name = spec.get('project', {})\
         .get('claimName', default_project_claim_name)
 
+    # ConfigMaps
+    # ----------
+
+    # A Nextflow Kubernetes configuration file
+    # Written to the Job container as ${HOME}/nextflow.config
+    configmap_vars = {'sa': SA,
+                      'claim_name': project_claim_name,
+                      'project_id': project_id}
+    configmap_dmk = {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+            "name": "nf-config-%s" % name,
+            "labels": {
+                "app": name
+            }
+        },
+        "data": {
+            "nextflow.config": nextflow_config % configmap_vars
+        }
+    }
+
+    kopf.adopt(configmap_dmk)
+    core_api = kubernetes.client.CoreV1Api()
+    try:
+        core_api.create_namespaced_config_map(namespace, configmap_dmk)
+    except kubernetes.client.exceptions.ApiException as ex:
+        # Whatever has happened treat it as a 'PermanentError',
+        # thus preventing the operator from constantly re-trying.
+        raise kopf.PermanentError(f'ApiException ({ex.status})')
+
+    # Job
+    # ---
+
     job: Dict[str, Any] = {
         'kind': 'Job',
         'apiVersion': 'batch/v1',
@@ -151,23 +203,38 @@ def create(name, namespace, spec, logger, **_):
                                 'memory': memory_limit
                             }
                         },
-                        'volumeMounts': [{
-                            'name': 'project',
-                            'mountPath': project_mount,
-                            'subPath': project_id
-                        }]
+                        'volumeMounts': [
+                            {
+                                'name': 'project',
+                                'mountPath': project_mount,
+                                'subPath': project_id
+                            },
+                            {
+                                'name': 'nf-config',
+                                'mountPath': '/code/nextflow.config',
+                                'subPath': 'nextflow.config'
+                            }
+                        ]
                     }],
                     'securityContext': {
                         'runAsUser': sc_run_as_user,
                         'runAsGroup': sc_run_as_group,
                         'fsGroup': sc_fs_group
                     },
-                    'volumes': [{
-                        'name': 'project',
-                        'persistentVolumeClaim': {
-                            'claimName': project_claim_name
+                    'volumes': [
+                        {
+                            'name': 'project',
+                            'persistentVolumeClaim': {
+                                'claimName': project_claim_name
+                            },
+                        },
+                        {
+                            "name": "nf-config",
+                            "configMap": {
+                                "name": "nf-config-%s" % name
+                            }
                         }
-                    }]
+                    ]
                 }
             }
         }
@@ -240,5 +307,15 @@ def job_event(event, logger, **_):
                 batch_api.delete_namespaced_job(job_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
                 logger.warning(f'ApiException ({ex.status}) deleting Job ({ex.body})')
+
+            # Delete the ConfigMap
+            instance_id: str = pod['metadata']['labels'][POD_INSTANCE_LABEL]
+            cm_name = f'nf-config-{instance_id}'
+            logger.info(f'Deleting ConfigMap "{cm_name}"...')
+            core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
+            try:
+                core_api.delete_namespaced_config_map(cm_name, pod_namespace)
+            except kubernetes.client.exceptions.ApiException as ex:
+                logger.warning(f'ApiException ({ex.status}) deleting ConfigMap ({ex.body})')
 
             logger.info('Deleted')
