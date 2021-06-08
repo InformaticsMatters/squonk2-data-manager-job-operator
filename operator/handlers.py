@@ -36,7 +36,7 @@ SA = 'data-manager-app'
 
 # Some (key) default variables...
 default_cpu: str = '1'
-default_memory: str = '100Mi'
+default_memory: str = '1Gi'
 default_project_mount: str = '/project'
 default_project_claim_name: str = 'project'
 default_user_id = 1001
