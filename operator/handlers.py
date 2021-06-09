@@ -283,21 +283,20 @@ def job_event(event, logger, **_):
         pod_phase: str = pod['status']['phase']
         if pod_phase in ['Succeeded']:
 
-            job_name: str = pod['metadata']['labels']['job-name']
+            pod_name: str = pod['metadata']['name']
 
             # Ignore the event if it relates to a Pod
             # that's explicitly marked for debug.
             if POD_DEBUG_LABEL in pod['metadata']['labels']:
-                logger.warning(f'Not deleting Job "{job_name}".'
+                logger.warning(f'Not deleting Job "{pod_name}".'
                                f' It is protected from deletion'
                                f' as it has a debug label.')
                 return
 
             # Ok to delete if we get here...
-            logger.info(f'Job {job_name} has finished. Deleting...')
+            logger.info(f'Job {pod_name} has finished. Deleting...')
 
             # Delete the Pod
-            pod_name: str = pod['metadata']['name']
             pod_namespace: str = pod['metadata']['namespace']
             logger.info(f'Deleting Pod "{pod_name}"...')
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
