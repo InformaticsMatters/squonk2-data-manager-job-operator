@@ -278,7 +278,7 @@ def job_event(event, logger, **_):
     if event['type'] == 'MODIFIED':
         pod: Dict[str, Any] = event['object']
         pod_phase: str = pod['status']['phase']
-        if pod_phase in ['Succeeded']:
+        if pod_phase in ['Succeeded', 'Failed', 'Completed']:
 
             pod_name: str = pod['metadata']['name']
 
