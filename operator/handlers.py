@@ -48,7 +48,9 @@ default_fs_group = 1001
 # A ConfigMap written into the directory '$HOME/data-manager.config'
 nextflow_config = """
 process {
-  pod = [nodeSelector: 'informaticsmatters.com/purpose-worker=yes']
+  pod = [ [nodeSelector: 'informaticsmatters.com/purpose-worker=yes'],
+          [label: 'data-manager.informaticsmatters.com/instance-id',
+           value: '%(name)s'] ]
 }
 executor {
   name = 'k8s'
@@ -140,10 +142,11 @@ def create(name, namespace, spec, logger, **_):
 
     # A Nextflow Kubernetes configuration file
     # Written to the Job container as ${HOME}/nextflow.config
-    configmap_vars = {'sa': SA,
-                      'claim_name': project_claim_name,
+    configmap_vars = {'claim_name': project_claim_name,
+                      'name': name,
                       'project_id': project_id,
                       'project_mount': project_mount,
+                      'sa': SA,
                       'sc_run_as_user': sc_run_as_user}
     configmap_dmk = {
         "apiVersion": "v1",
