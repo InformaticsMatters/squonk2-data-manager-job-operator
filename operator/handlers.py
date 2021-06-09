@@ -55,10 +55,11 @@ executor {
 }
 k8s {
   serviceAccount = '%(sa)s'
-  storageMountPath = '/data'
+  runAsUser = '%s(sc_run_as_user)s'
   storageClaimName = '%(claim_name)s'
+  storageMountPath = '/%{project_mount)s'
   storageSubPath = '%(project_id)s'
-  workDir = '/data'
+  workDir = '/%(project_mount)s/work'
 }
 """
 
@@ -141,7 +142,9 @@ def create(name, namespace, spec, logger, **_):
     # Written to the Job container as ${HOME}/nextflow.config
     configmap_vars = {'sa': SA,
                       'claim_name': project_claim_name,
-                      'project_id': project_id}
+                      'project_id': project_id,
+                      'project_mount': project_mount,
+                      'sc_run_as_user': sc_run_as_user}
     configmap_dmk = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
