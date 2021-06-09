@@ -57,6 +57,12 @@ To remove the operator (assuming there are no operator-derived instances)...
     is described simply to illustrate a 'clean-up' - you would not
     normally remove an Application operator in a production environment.
 
+The staging and production sites have parameter vaults. To deploy there
+you will need the vault password: -
+
+    $ export PARAMS=staging-parameters
+    $ ansible-playbook -e @${PARAMS}.yaml.vault --ask-vault-password site.yaml
+
 ---
 
 [ansible]: https://pypi.org/project/ansible/
