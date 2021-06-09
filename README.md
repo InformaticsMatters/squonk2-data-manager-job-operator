@@ -11,7 +11,7 @@
 
 This repo contains a Kubernetes [Operator] based on the [kopf] and [kubernetes]
 Python packages that is used by the **Informatics Matters Data Manager API**
-to create transient Jobs for the Data Manager service.
+to create transient Jobs (Kubernetes Pods) for the Data Manager service.
 
 Prerequisites: -
 

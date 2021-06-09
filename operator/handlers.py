@@ -57,7 +57,7 @@ k8s {
   serviceAccount = '%(sa)s'
   runAsUser = %(sc_run_as_user)s
   storageClaimName = '%(claim_name)s'
-  storageMountPath = '/%(project_mount)s'
+  storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
   workDir = '/%(project_mount)s/work'
 }
@@ -168,78 +168,72 @@ def create(name, namespace, spec, logger, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
-    # Job
+    # Pod
     # ---
 
-    job: Dict[str, Any] = {
-        'kind': 'Job',
-        'apiVersion': 'batch/v1',
+    pod: Dict[str, Any] = {
+        'kind': 'Pod',
+        'apiVersion': 'v1',
         'metadata': {
-          'name': name
+            'name': name,
+            'labels': {
+                POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE,
+                POD_INSTANCE_LABEL: name,
+                POD_INSTANCE_IS_JOB: 'yes',
+                POD_TASK_ID_LABEL: task_id
+            }
         },
         'spec': {
-            'template': {
-                'metadata': {
-                    'labels': {
-                        POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE,
-                        POD_INSTANCE_LABEL: name,
-                        POD_INSTANCE_IS_JOB: 'yes',
-                        POD_TASK_ID_LABEL: task_id
+            'serviceAccountName': SA,
+            'restartPolicy': 'Never',
+            'containers': [{
+                'name': name,
+                'image': image,
+                'command': command_items,
+                'imagePullPolicy': image_pull_policy,
+                'terminationMessagePolicy': 'FallbackToLogsOnError',
+                'resources': {
+                    'requests': {
+                        'cpu': cpu_request,
+                        'memory': memory_request
+                    },
+                    'limits': {
+                        'cpu': cpu_limit,
+                        'memory': memory_limit
                     }
                 },
-                'spec': {
-                    'serviceAccountName': SA,
-                    'restartPolicy': 'Never',
-                    'containers': [{
-                        'name': name,
-                        'image': image,
-                        'command': command_items,
-                        'imagePullPolicy': image_pull_policy,
-                        'terminationMessagePolicy': 'FallbackToLogsOnError',
-                        'resources': {
-                            'requests': {
-                                'cpu': cpu_request,
-                                'memory': memory_request
-                            },
-                            'limits': {
-                                'cpu': cpu_limit,
-                                'memory': memory_limit
-                            }
-                        },
-                        'volumeMounts': [
-                            {
-                                'name': 'project',
-                                'mountPath': project_mount,
-                                'subPath': project_id
-                            },
-                            {
-                                'name': 'nf-config',
-                                'mountPath': '/code/nextflow.config',
-                                'subPath': 'nextflow.config'
-                            }
-                        ]
-                    }],
-                    'securityContext': {
-                        'runAsUser': sc_run_as_user,
-                        'runAsGroup': sc_run_as_group,
-                        'fsGroup': sc_fs_group
+                'volumeMounts': [
+                    {
+                        'name': 'project',
+                        'mountPath': project_mount,
+                        'subPath': project_id
                     },
-                    'volumes': [
-                        {
-                            'name': 'project',
-                            'persistentVolumeClaim': {
-                                'claimName': project_claim_name
-                            },
-                        },
-                        {
-                            "name": "nf-config",
-                            "configMap": {
-                                "name": "nf-config-%s" % name
-                            }
-                        }
-                    ]
+                    {
+                        'name': 'nf-config',
+                        'mountPath': '/code/nextflow.config',
+                        'subPath': 'nextflow.config'
+                    }
+                ]
+            }],
+            'securityContext': {
+                'runAsUser': sc_run_as_user,
+                'runAsGroup': sc_run_as_group,
+                'fsGroup': sc_fs_group
+            },
+            'volumes': [
+                {
+                    'name': 'project',
+                    'persistentVolumeClaim': {
+                        'claimName': project_claim_name
+                    },
+                },
+                {
+                    "name": "nf-config",
+                    "configMap": {
+                        "name": "nf-config-%s" % name
+                    }
                 }
-            }
+            ]
         }
     }
 
@@ -250,15 +244,16 @@ def create(name, namespace, spec, logger, **_):
     if spec.get('debug'):
         logger.warning('spec.debug is set. The corresponding Pod'
                        ' will not be automatically deleted')
-        job['spec']['template']['metadata']['labels'][POD_DEBUG_LABEL] = 'yes'
+        pod['metadata']['labels'][POD_DEBUG_LABEL] = 'yes'
 
     # Definition's complete - adopt it.
-    kopf.adopt(job)
+    kopf.adopt(pod)
 
-    # Noe create it - Jobs are part of the Batch V1 API
-    api: kubernetes.client.BatchV1Api = kubernetes.client.BatchV1Api()
+    # Noe create it - Pods are part of the Core V1 API
+    api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
     try:
-        api.create_namespaced_job(namespace, job)
+        api.create_namespaced_pod(body=pod,
+                                  namespace=namespace)
     except kubernetes.client.exceptions.ApiException as ex:
         # Whatever has happened treat it as a 'PermanentError',
         # thus preventing the operator from constantly re-trying.
@@ -302,14 +297,6 @@ def job_event(event, logger, **_):
                 core_api.delete_namespaced_pod(pod_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
                 logger.warning(f'ApiException ({ex.status}) deleting Pod ({ex.body})')
-
-            # Delete the Job
-            logger.info(f'Deleting Job "{pod_name}"...')
-            batch_api: kubernetes.client.BatchV1Api = kubernetes.client.BatchV1Api()
-            try:
-                batch_api.delete_namespaced_job(job_name, pod_namespace)
-            except kubernetes.client.exceptions.ApiException as ex:
-                logger.warning(f'ApiException ({ex.status}) deleting Job ({ex.body})')
 
             # Delete the ConfigMap
             instance_id: str = pod['metadata']['labels'][POD_INSTANCE_LABEL]
