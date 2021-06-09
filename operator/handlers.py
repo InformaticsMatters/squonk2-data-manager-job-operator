@@ -117,8 +117,6 @@ def create(name, namespace, spec, logger, **_):
         .get('runAsUser', default_user_id)
     sc_run_as_group = spec.get('securityContext', {})\
         .get('runAsGroup', default_group_id)
-    sc_fs_group = spec.get('securityContext', {})\
-        .get('fsGroup', default_fs_group)
 
     # Are resource requests/limits provided?
     cpu_request: Any = spec.get('resources', {})\
