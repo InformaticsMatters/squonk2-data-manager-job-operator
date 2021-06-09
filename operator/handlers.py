@@ -195,6 +195,10 @@ def create(name, namespace, spec, logger, **_):
                 'command': command_items,
                 'imagePullPolicy': image_pull_policy,
                 'terminationMessagePolicy': 'FallbackToLogsOnError',
+                'env': [{
+                    'name': 'NXF_WORK',
+                    'value': project_mount + '/work'
+                }],
                 'resources': {
                     'requests': {
                         'cpu': cpu_request,
