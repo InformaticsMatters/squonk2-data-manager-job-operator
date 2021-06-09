@@ -225,7 +225,7 @@ def create(name, namespace, spec, logger, **_):
             'securityContext': {
                 'runAsUser': sc_run_as_user,
                 'runAsGroup': sc_run_as_group,
-                'fsGroup': sc_fs_group
+                'fsGroup': 0
             },
             'volumes': [
                 {
