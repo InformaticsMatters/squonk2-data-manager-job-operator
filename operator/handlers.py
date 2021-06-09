@@ -55,7 +55,7 @@ executor {
 }
 k8s {
   serviceAccount = '%(sa)s'
-  runAsUser = '%(sc_run_as_user)s'
+  runAsUser = %(sc_run_as_user)s
   storageClaimName = '%(claim_name)s'
   storageMountPath = '/%(project_mount)s'
   storageSubPath = '%(project_id)s'
