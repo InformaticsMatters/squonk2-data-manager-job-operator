@@ -196,6 +196,9 @@ def create(name, namespace, spec, logger, **_):
                 'env': [{
                     'name': 'NXF_WORK',
                     'value': project_mount + '/work'
+                }, {
+                    'name': 'NXF_DEBUG',
+                    'value': '1'
                 }],
                 'resources': {
                     'requests': {
