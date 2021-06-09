@@ -41,7 +41,7 @@ rules:
   resources: [jobs]
   verbs: [create]
 - apiGroups: [apps, extensions, '']
-  resources: [pods]
+  resources: [pods, configmaps]
   verbs: [create]
 
 ---
