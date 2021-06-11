@@ -61,13 +61,13 @@ k8s {
   storageClaimName = '%(claim_name)s'
   storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
-  workDir = '%(project_mount)s/work'
+  workDir = '%(project_mount)s/.{$name}/work'
 }
 """
 
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
 def create(name, namespace, spec, logger, **_):
-    """Hanlder for CRD create events.
+    """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
     adopting them in kopf before using the corresponding Kubernetes API
     to create them.
@@ -77,7 +77,8 @@ def create(name, namespace, spec, logger, **_):
     """
 
     # A PermanentError is raised for any 'do not try this again' problems.
-    # There are mandatory properties, that cannot have defaults...
+    # There are mandatory properties, that cannot have defaults.
+    # The name is the Data Manager instance ID (UUID)
     if not name:
         raise kopf.PermanentError('The object must have a name')
     if not namespace:
@@ -195,7 +196,7 @@ def create(name, namespace, spec, logger, **_):
                 'terminationMessagePolicy': 'FallbackToLogsOnError',
                 'env': [{
                     'name': 'NXF_WORK',
-                    'value': project_mount + '/work'
+                    'value': project_mount + '/.' + name + '/work'
                 }],
                 'resources': {
                     'requests': {
