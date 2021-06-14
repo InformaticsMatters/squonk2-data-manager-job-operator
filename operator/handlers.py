@@ -61,7 +61,7 @@ k8s {
   storageClaimName = '%(claim_name)s'
   storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
-  workDir = '%(project_mount)s/.{$name}/work'
+  workDir = '%(project_mount)s/.%(name)s/work'
 }
 """
 
