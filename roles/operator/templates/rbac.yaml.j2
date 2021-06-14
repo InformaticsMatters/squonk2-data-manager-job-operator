@@ -42,7 +42,7 @@ rules:
   verbs: [create]
 - apiGroups: [apps, extensions, '']
   resources: [pods, configmaps]
-  verbs: [create]
+  verbs: [get, list, watch, create, delete]
 
 ---
 kind: ClusterRoleBinding
