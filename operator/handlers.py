@@ -1,5 +1,6 @@
 """A kopf handler for the DataManagerJob CRD.
 """
+import os
 import shlex
 from typing import Any, Dict, List
 
@@ -131,6 +132,10 @@ def create(name, namespace, spec, logger, **_):
 
     # The project mount
     project_mount = spec.get('projectMount', default_project_mount)
+    # The container working directory and sub-path,
+    # The sub-path is expected (and only used) if there's a working directory.
+    working_directory = spec.get('workingDirectory')
+    working_sub_path = spec.get('workingSubPath')
     # The project claim name and project-id.
     # The project ID must be provided.
     project_claim_name = spec.get('project', {})\
@@ -242,6 +247,13 @@ def create(name, namespace, spec, logger, **_):
             ]
         }
     }
+
+    # Optional Job working directory and sub-path
+    if working_directory:
+        path = working_directory
+        if working_sub_path:
+            path = os.path.join(working_directory, working_sub_path)
+        pod['spec']['containers'][0]['workingDir'] = path
 
     # Instructed to debug the Job?
     # Yes if the spec's debug is set.
