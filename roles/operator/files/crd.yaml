@@ -43,6 +43,10 @@ spec:
                 type: string
               projectMount:
                 type: string
+              workingDirectory:
+                type: string
+              workingSubPath:
+                type: string
               resources:
                 type: object
                 properties:
