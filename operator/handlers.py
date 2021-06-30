@@ -254,6 +254,8 @@ def create(name, namespace, spec, logger, **_):
         if working_sub_path:
             path = os.path.join(working_directory, working_sub_path)
         pod['spec']['containers'][0]['workingDir'] = path
+        logger.warning(f'spec.workingDirectory is set.'
+                       f' Setting workingDir to {path}')
 
     # Instructed to debug the Job?
     # Yes if the spec's debug is set.
