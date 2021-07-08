@@ -81,9 +81,9 @@ def configure(settings: kopf.OperatorSettings, **_):
     """The operator startup handler.
     """
     # Here we adjust the logging level
-    settings.posting.level = logging.DEBUG
+    settings.posting.level = logging.INFO
 
-    logging.info(f'Startup _POD_PRE_DELETE_DELAY_S={_POD_PRE_DELETE_DELAY_S}')
+    logging.info('Startup _POD_PRE_DELETE_DELAY_S=%s', _POD_PRE_DELETE_DELAY_S)
 
 
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
@@ -195,7 +195,7 @@ def create(name, uid, namespace, spec, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
-    logging.info(f'Created ConfigMap {name}')
+    logging.info('Created ConfigMap %s', name)
 
     # Pod
     # ---
@@ -276,8 +276,8 @@ def create(name, uid, namespace, spec, **_):
         if working_sub_path:
             path = os.path.join(working_directory, working_sub_path)
         pod['spec']['containers'][0]['workingDir'] = path
-        logging.warning(f'spec.workingDirectory is set.'
-                        f' Setting workingDir to {path}')
+        logging.warning('spec.workingDirectory is set.'
+                        ' Setting workingDir to %s', path)
 
     # Instructed to debug the Job?
     # Yes if the spec's debug is set.
@@ -301,7 +301,7 @@ def create(name, uid, namespace, spec, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
-    logging.info(f"Created Pod {name}")
+    logging.info('Created Pod %s' % name)
 
 
 @kopf.on.event('', 'v1', 'pods',
@@ -315,57 +315,57 @@ def job_event(event, **_):
     (it won't be done automatically by the Operator).
     """
     event_type: str = event['type']
-    logging.debug(f'Handling event_type={event_type}')
+    logging.info('Handling event_type=%s', event_type)
 
     if event_type == 'MODIFIED':
         pod: Dict[str, Any] = event['object']
         pod_phase: str = pod['status']['phase']
 
-        logging.info(f'Handling event'
-                     f' type={event_type} pod_phase={pod_phase}...')
+        logging.info('Handling event type=%s pod_phase=%s...',
+                     event_type, pod_phase)
 
         if pod_phase in ['Succeeded', 'Failed', 'Completed']:
 
             pod_name: str = pod['metadata']['name']
-            logging.info(f'...for Pod {pod_name}')
+            logging.info('...for Pod %s', pod_name)
 
             # Ignore the event if it relates to a Pod
             # that's explicitly marked for debug.
             if POD_DEBUG_LABEL in pod['metadata']['labels']:
-                logging.warning(f'Not deleting Job "{pod_name}".'
-                                f' It is protected from deletion'
-                                f' as it has a debug label.')
+                logging.warning('Not deleting Job "%s".'
+                                ' It is protected from deletion'
+                                ' as it has a debug label.', pod_name)
                 return
 
             # Ok to delete if we get here...
             logging.info(f'Job "{pod_name}" has finished.')
             if _POD_PRE_DELETE_DELAY_S > 0:
-                logging.info(f'Deleting "{pod_name}"'
-                             f' after a delay of {_POD_PRE_DELETE_DELAY_S}'
-                             f' seconds...')
+                logging.info('Deleting "%s"'
+                             ' after a delay of %s'
+                             ' seconds...', pod_name, _POD_PRE_DELETE_DELAY_S)
                 time.sleep(_POD_PRE_DELETE_DELAY_S)
 
             # Delete the Pod
             pod_namespace: str = pod['metadata']['namespace']
-            logging.info(f'Deleting Pod "{pod_name}"'
-                         f' (namespace={pod_namespace})...')
+            logging.info('Deleting Pod "%s" (namespace=%s)...',
+                         pod_name, pod_namespace)
 
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
                 core_api.delete_namespaced_pod(pod_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
-                logging.warning(f'ApiException ({ex.status})'
-                                f' deleting Pod "{pod_name}" ({ex.body})')
+                logging.warning('ApiException (%s) deleting Pod "%s" (%s)',
+                                ex.status, pod_name, ex.body)
 
             # Delete the ConfigMap
             instance_id: str = pod['metadata']['labels'][POD_INSTANCE_LABEL]
             cm_name = f'nf-config-{instance_id}'
-            logging.info(f'Deleting ConfigMap "{cm_name}"...')
+            logging.info('Deleting ConfigMap "%s"...', cm_name)
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
                 core_api.delete_namespaced_config_map(cm_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
-                logging.warning(f'ApiException ({ex.status})'
-                                f' deleting ConfigMap "{cm_name}"({ex.body})')
+                logging.warning('ApiException (%s) deleting ConfigMap "%s" (%s)',
+                                ex.status, cm_name, ex.body)
 
-            logging.info(f'Deleted "{pod_name}')
+            logging.info('Deleted "%s"', pod_name)
