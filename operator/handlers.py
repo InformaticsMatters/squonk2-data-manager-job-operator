@@ -87,7 +87,7 @@ def configure(settings: kopf.OperatorSettings, **_):
 
 
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
-def create(name, uid, namespace, spec, **_):
+def create(name, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
     adopting them in kopf before using the corresponding Kubernetes API
@@ -301,7 +301,7 @@ def create(name, uid, namespace, spec, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
-    logging.info('Created Pod %s' % name)
+    logging.info('Created Pod %s',  name)
 
 
 @kopf.on.event('', 'v1', 'pods',
@@ -338,7 +338,7 @@ def job_event(event, **_):
                 return
 
             # Ok to delete if we get here...
-            logging.info(f'Job "{pod_name}" has finished.')
+            logging.info('Job "%s" has finished.', pod_name)
             if _POD_PRE_DELETE_DELAY_S > 0:
                 logging.info('Deleting "%s"'
                              ' after a delay of %s'
