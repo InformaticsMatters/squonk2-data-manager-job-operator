@@ -13,4 +13,4 @@ RUN pip install -r requirements.txt
 WORKDIR /src
 COPY handlers.py /src/
 
-CMD kopf run ./handlers.py --verbose
+CMD kopf run ./handlers.py --verbose --log-format=full

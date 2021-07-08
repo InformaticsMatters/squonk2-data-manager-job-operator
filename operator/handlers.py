@@ -5,6 +5,7 @@ import shlex
 import time
 from typing import Any, Dict, List
 
+import logging
 import kopf
 import kubernetes
 
@@ -73,6 +74,15 @@ k8s {
   workDir = '%(project_mount)s/.%(name)s/work'
 }
 """
+
+
+@kopf.on.startup()
+def configure(settings: kopf.OperatorSettings, **_):
+    """The operator startup handler.
+    """
+    # Here we adjust the logging level
+    settings.posting.level = logging.DEBUG
+
 
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
 def create(name, namespace, spec, logger, **_):
@@ -183,6 +193,8 @@ def create(name, namespace, spec, logger, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
+    logger.info("Created ConfigMap")
+
     # Pod
     # ---
 
@@ -287,6 +299,8 @@ def create(name, namespace, spec, logger, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
+    logger.info("Created Pod")
+
 
 @kopf.on.event('', 'v1', 'pods',
                labels={POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE})
@@ -298,12 +312,18 @@ def job_event(event, logger, **_):
     When it is, we delete the Pod and the Pod's Job
     (it won't be done automatically by the Operator).
     """
-    if event['type'] == 'MODIFIED':
+    event_type: str = event['type']
+    if event_type == 'MODIFIED':
         pod: Dict[str, Any] = event['object']
         pod_phase: str = pod['status']['phase']
+
+        logger.debug(f'Handling event'
+                     f' type={event_type} pod_phase={pod_phase}...')
+
         if pod_phase in ['Succeeded', 'Failed', 'Completed']:
 
             pod_name: str = pod['metadata']['name']
+            logger.debug(f'...for Pod {pod_name}')
 
             # Ignore the event if it relates to a Pod
             # that's explicitly marked for debug.
