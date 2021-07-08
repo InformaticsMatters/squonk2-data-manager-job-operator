@@ -83,9 +83,11 @@ def configure(settings: kopf.OperatorSettings, **_):
     # Here we adjust the logging level
     settings.posting.level = logging.DEBUG
 
+    logging.info(f'Startup _POD_PRE_DELETE_DELAY_S={_POD_PRE_DELETE_DELAY_S}')
+
 
 @kopf.on.create('squonk.it', 'v1', 'datamanagerjobs')
-def create(name, namespace, spec, logger, **_):
+def create(name, uid, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
     adopting them in kopf before using the corresponding Kubernetes API
@@ -193,7 +195,7 @@ def create(name, namespace, spec, logger, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
-    logger.info("Created ConfigMap")
+    logging.info(f'Created ConfigMap {name}')
 
     # Pod
     # ---
@@ -274,16 +276,16 @@ def create(name, namespace, spec, logger, **_):
         if working_sub_path:
             path = os.path.join(working_directory, working_sub_path)
         pod['spec']['containers'][0]['workingDir'] = path
-        logger.warning(f'spec.workingDirectory is set.'
-                       f' Setting workingDir to {path}')
+        logging.warning(f'spec.workingDirectory is set.'
+                        f' Setting workingDir to {path}')
 
     # Instructed to debug the Job?
     # Yes if the spec's debug is set.
     # If so we add a DEBUG label to the template,
     # which prevents our 'on.event' handler from deleting the Job or its Pod.
     if spec.get('debug'):
-        logger.warning('spec.debug is set. The corresponding Pod'
-                       ' will not be automatically deleted')
+        logging.warning('spec.debug is set. The corresponding Pod'
+                        ' will not be automatically deleted')
         pod['metadata']['labels'][POD_DEBUG_LABEL] = 'yes'
 
     # Definition's complete - adopt it.
@@ -299,12 +301,12 @@ def create(name, namespace, spec, logger, **_):
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f'ApiException ({ex.status})')
 
-    logger.info("Created Pod")
+    logging.info(f"Created Pod {name}")
 
 
 @kopf.on.event('', 'v1', 'pods',
                labels={POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE})
-def job_event(event, logger, **_):
+def job_event(event, **_):
     """An event handler for Pods that we created -
     i.e. those whose 'purpose' is 'JOB'.
 
@@ -313,55 +315,57 @@ def job_event(event, logger, **_):
     (it won't be done automatically by the Operator).
     """
     event_type: str = event['type']
+    logging.debug(f'Handling event_type={event_type}')
+
     if event_type == 'MODIFIED':
         pod: Dict[str, Any] = event['object']
         pod_phase: str = pod['status']['phase']
 
-        logger.debug(f'Handling event'
+        logging.info(f'Handling event'
                      f' type={event_type} pod_phase={pod_phase}...')
 
         if pod_phase in ['Succeeded', 'Failed', 'Completed']:
 
             pod_name: str = pod['metadata']['name']
-            logger.debug(f'...for Pod {pod_name}')
+            logging.info(f'...for Pod {pod_name}')
 
             # Ignore the event if it relates to a Pod
             # that's explicitly marked for debug.
             if POD_DEBUG_LABEL in pod['metadata']['labels']:
-                logger.warning(f'Not deleting Job "{pod_name}".'
-                               f' It is protected from deletion'
-                               f' as it has a debug label.')
+                logging.warning(f'Not deleting Job "{pod_name}".'
+                                f' It is protected from deletion'
+                                f' as it has a debug label.')
                 return
 
             # Ok to delete if we get here...
-            logger.info(f'Job "{pod_name}" has finished.')
+            logging.info(f'Job "{pod_name}" has finished.')
             if _POD_PRE_DELETE_DELAY_S > 0:
-                logger.info(f'Deleting "{pod_name}"'
-                            f' after a delay of {_POD_PRE_DELETE_DELAY_S}'
-                            f' seconds...')
+                logging.info(f'Deleting "{pod_name}"'
+                             f' after a delay of {_POD_PRE_DELETE_DELAY_S}'
+                             f' seconds...')
                 time.sleep(_POD_PRE_DELETE_DELAY_S)
 
             # Delete the Pod
             pod_namespace: str = pod['metadata']['namespace']
-            logger.info(f'Deleting Pod "{pod_name}"'
-                        f' (namespace={pod_namespace})...')
+            logging.info(f'Deleting Pod "{pod_name}"'
+                         f' (namespace={pod_namespace})...')
 
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
                 core_api.delete_namespaced_pod(pod_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
-                logger.warning(f'ApiException ({ex.status})'
-                               f' deleting Pod "{pod_name}" ({ex.body})')
+                logging.warning(f'ApiException ({ex.status})'
+                                f' deleting Pod "{pod_name}" ({ex.body})')
 
             # Delete the ConfigMap
             instance_id: str = pod['metadata']['labels'][POD_INSTANCE_LABEL]
             cm_name = f'nf-config-{instance_id}'
-            logger.info(f'Deleting ConfigMap "{cm_name}"...')
+            logging.info(f'Deleting ConfigMap "{cm_name}"...')
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
                 core_api.delete_namespaced_config_map(cm_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
-                logger.warning(f'ApiException ({ex.status})'
-                               f' deleting ConfigMap "{cm_name}"({ex.body})')
+                logging.warning(f'ApiException ({ex.status})'
+                                f' deleting ConfigMap "{cm_name}"({ex.body})')
 
-            logger.info(f'Deleted "{pod_name}')
+            logging.info(f'Deleted "{pod_name}')
