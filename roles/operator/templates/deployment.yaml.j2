@@ -25,3 +25,6 @@ spec:
 {% else %}
         imagePullPolicy: IfNotPresent
 {% endif %}
+        env:
+        - name: JO_POD_PRE_DELETE_DELAY_S
+          value: '{{ jo_pre_delete_delay_s }}'

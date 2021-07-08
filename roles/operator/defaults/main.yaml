@@ -15,3 +15,7 @@ jo_image_tag: SetMe
 # nd where the operator will be located.
 # This namespace is expected to exist.
 jo_dmapi_namespace: data-manager-api-staging
+
+# The pre-delete delay (seconds) for Pods.
+# After a Pod's finished it's deleted after this period has elapsed.
+jo_pre_delete_delay_s: 5

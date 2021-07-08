@@ -2,6 +2,7 @@
 """
 import os
 import shlex
+import time
 from typing import Any, Dict, List
 
 import kopf
@@ -31,6 +32,13 @@ POD_DEBUG_LABEL: str = POD_BASE_LABEL + '/debug'
 # The purpose?
 # Here everything's a 'JOB'
 POD_PURPOSE_LABEL_VALUE: str = 'INSTANCE'
+
+# Pod pre-delete delay (seconds).
+# A fixed period of time the 'job_event' method waits
+# after deciding to delete the Pod before actually deleting it.
+# This delay gives the Data Manager log-watcher an opportunity to collect
+# any remaining log events.
+_POD_PRE_DELETE_DELAY_S: int = int(os.environ.get('JO_POD_PRE_DELETE_DELAY_S', '5'))
 
 # The application SA
 SA = 'data-manager-app'
@@ -306,16 +314,24 @@ def job_event(event, logger, **_):
                 return
 
             # Ok to delete if we get here...
-            logger.info(f'Job {pod_name} has finished. Deleting...')
+            logger.info(f'Job "{pod_name}" has finished.')
+            if _POD_PRE_DELETE_DELAY_S > 0:
+                logger.info(f'Deleting "{pod_name}"'
+                            f' after a delay of {_POD_PRE_DELETE_DELAY_S}'
+                            f' seconds...')
+                time.sleep(_POD_PRE_DELETE_DELAY_S)
 
             # Delete the Pod
             pod_namespace: str = pod['metadata']['namespace']
-            logger.info(f'Deleting Pod "{pod_name}"...')
+            logger.info(f'Deleting Pod "{pod_name}"'
+                        f' (namespace={pod_namespace})...')
+
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
                 core_api.delete_namespaced_pod(pod_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
-                logger.warning(f'ApiException ({ex.status}) deleting Pod ({ex.body})')
+                logger.warning(f'ApiException ({ex.status})'
+                               f' deleting Pod "{pod_name}" ({ex.body})')
 
             # Delete the ConfigMap
             instance_id: str = pod['metadata']['labels'][POD_INSTANCE_LABEL]
@@ -325,6 +341,7 @@ def job_event(event, logger, **_):
             try:
                 core_api.delete_namespaced_config_map(cm_name, pod_namespace)
             except kubernetes.client.exceptions.ApiException as ex:
-                logger.warning(f'ApiException ({ex.status}) deleting ConfigMap ({ex.body})')
+                logger.warning(f'ApiException ({ex.status})'
+                               f' deleting ConfigMap "{cm_name}"({ex.body})')
 
-            logger.info('Deleted')
+            logger.info(f'Deleted "{pod_name}')
