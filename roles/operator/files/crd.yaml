@@ -26,7 +26,7 @@ spec:
           spec:
             type: object
             properties:
-              # All DataManger-injected material
+              # All DataManager-injected material
               # will be namespaced by the property 'imDataManager'
               imDataManager:
                 type: object
