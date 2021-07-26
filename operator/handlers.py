@@ -9,31 +9,6 @@ import logging
 import kopf
 import kubernetes
 
-# Pod labels (used primarily for Task-based Pods)
-# Basename for all our labels...
-POD_BASE_LABEL: str = 'data-manager.informaticsmatters.com'
-# A label that identifies the purpose of the pod (task),
-# typically one of 'instance', 'dataset', 'file' and 'job'.
-POD_PURPOSE_LABEL: str = POD_BASE_LABEL + '/purpose'
-# A label that identifies instance ID for the Pod.
-# Only present if the Pod has a purpose label.
-POD_INSTANCE_LABEL: str = POD_BASE_LABEL + '/instance-id'
-# A label that identifies the instance as a DataManagerJob.
-# The value is unimportant (but it's 'yes')
-# If the label is not present, or is 'no' the instance is not
-# that of a DataManagerJob.
-POD_INSTANCE_IS_JOB: str = POD_BASE_LABEL + '/instance-is-job'
-# A label that identifies task ID for the Pod.
-# Only present if the Pod has a purpose label.
-POD_TASK_ID_LABEL: str = POD_BASE_LABEL + '/task-id'
-# A label that identifies task ID for the Pod.
-# Only present if the Pod has a purpose label.
-POD_DEBUG_LABEL: str = POD_BASE_LABEL + '/debug'
-
-# The purpose?
-# Here everything's a 'JOB'
-POD_PURPOSE_LABEL_VALUE: str = 'INSTANCE'
-
 # Pod pre-delete delay (seconds).
 # A fixed period of time the 'job_event' method waits
 # after deciding to delete the Pod before actually deleting it.
@@ -209,12 +184,7 @@ def create(name, namespace, spec, **_):
         'apiVersion': 'v1',
         'metadata': {
             'name': name,
-            'labels': {
-                POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE,
-                POD_INSTANCE_LABEL: name,
-                POD_INSTANCE_IS_JOB: 'yes',
-                POD_TASK_ID_LABEL: task_id
-            }
+            'labels': {}
         },
         'spec': {
             'serviceAccountName': SA,
@@ -296,7 +266,7 @@ def create(name, namespace, spec, **_):
     if material.get('debug'):
         logging.warning('spec.debug is set. The corresponding Pod'
                         ' will not be automatically deleted')
-        pod['metadata']['labels'][POD_DEBUG_LABEL] = 'yes'
+        pod['metadata']['labels']['debug'] = 'yes'
 
     # Definition's complete - adopt it.
     kopf.adopt(pod)
@@ -315,7 +285,7 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event('', 'v1', 'pods',
-               labels={POD_PURPOSE_LABEL: POD_PURPOSE_LABEL_VALUE})
+               labels={'data-manager.informaticsmatters.com/purpose': 'INSTANCE'})
 def job_event(event, **_):
     """An event handler for Pods that we created -
     i.e. those whose 'purpose' is 'JOB'.
@@ -341,7 +311,7 @@ def job_event(event, **_):
 
             # Ignore the event if it relates to a Pod
             # that's explicitly marked for debug.
-            if POD_DEBUG_LABEL in pod['metadata']['labels']:
+            if 'debug' in pod['metadata']['labels']:
                 logging.warning('Not deleting Job "%s".'
                                 ' It is protected from deletion'
                                 ' as it has a debug label.', pod_name)
@@ -368,8 +338,7 @@ def job_event(event, **_):
                                 ex.status, pod_name, ex.body)
 
             # Delete the ConfigMap
-            instance_id: str = pod['metadata']['labels'][POD_INSTANCE_LABEL]
-            cm_name = f'nf-config-{instance_id}'
+            cm_name = f'nf-config-{pod_name}'
             logging.info('Deleting ConfigMap "%s"...', cm_name)
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
