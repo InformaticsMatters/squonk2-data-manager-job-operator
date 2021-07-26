@@ -107,16 +107,20 @@ def create(name, namespace, spec, **_):
     if not spec:
         raise kopf.PermanentError('The object must have a spec')
 
-    image: str = spec.get('image')
+    # All Data-Manager provided material
+    # wil be namespaced within the 'imDataManager' property
+    material: Dict[str, any] = spec.get('imDataManager', {})
+
+    image: str = material.get('image')
     if not image:
         raise kopf.PermanentError('image is not defined')
-    command: str = spec.get('command')
+    command: str = material.get('command')
     if not command:
         raise kopf.PermanentError('command is not defined')
-    task_id: str = spec.get('taskId')
+    task_id: str = material.get('taskId')
     if not task_id:
         raise kopf.PermanentError('taskId is not defined')
-    project_id = spec.get('project', {}).get('id')
+    project_id = material.get('project', {}).get('id')
     if not project_id:
         raise kopf.PermanentError('project.id is not defined')
 
@@ -135,30 +139,30 @@ def create(name, namespace, spec, **_):
     command_items = shlex.split(command)
 
     # Security options
-    sc_run_as_user = spec.get('securityContext', {})\
+    sc_run_as_user = material.get('securityContext', {})\
         .get('runAsUser', default_user_id)
-    sc_run_as_group = spec.get('securityContext', {})\
+    sc_run_as_group = material.get('securityContext', {})\
         .get('runAsGroup', default_group_id)
 
     # Are resource requests/limits provided?
-    cpu_request: Any = spec.get('resources', {})\
+    cpu_request: Any = material.get('resources', {})\
         .get('requests', {}).get("cpu", default_cpu)
-    memory_request: Any = spec.get('resources', {})\
+    memory_request: Any = material.get('resources', {})\
         .get('requests', {}).get("memory", default_memory)
-    cpu_limit: Any = spec.get('resources', {})\
+    cpu_limit: Any = material.get('resources', {})\
         .get('limits', {}).get('cpu', default_cpu)
-    memory_limit: Any = spec.get('resources', {})\
+    memory_limit: Any = material.get('resources', {})\
         .get('limits', {}).get('memory', default_memory)
 
     # The project mount
-    project_mount = spec.get('projectMount', default_project_mount)
+    project_mount = material.get('projectMount', default_project_mount)
     # The container working directory and sub-path,
     # The sub-path is expected (and only used) if there's a working directory.
-    working_directory = spec.get('workingDirectory')
-    working_sub_path = spec.get('workingSubPath')
+    working_directory = material.get('workingDirectory')
+    working_sub_path = material.get('workingSubPath')
     # The project claim name and project-id.
     # The project ID must be provided.
-    project_claim_name = spec.get('project', {})\
+    project_claim_name = material.get('project', {})\
         .get('claimName', default_project_claim_name)
 
     # ConfigMaps
@@ -270,6 +274,12 @@ def create(name, namespace, spec, **_):
         }
     }
 
+    # Additional labels?
+    # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
+    for label in material.get('labels', []):
+        key, value = label.split('=')
+        pod['metadata']['labels'][key] = value
+
     # Optional Job working directory and sub-path
     if working_directory:
         path = working_directory
@@ -283,7 +293,7 @@ def create(name, namespace, spec, **_):
     # Yes if the spec's debug is set.
     # If so we add a DEBUG label to the template,
     # which prevents our 'on.event' handler from deleting the Job or its Pod.
-    if spec.get('debug'):
+    if material.get('debug'):
         logging.warning('spec.debug is set. The corresponding Pod'
                         ' will not be automatically deleted')
         pod['metadata']['labels'][POD_DEBUG_LABEL] = 'yes'

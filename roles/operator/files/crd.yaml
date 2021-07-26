@@ -26,57 +26,66 @@ spec:
           spec:
             type: object
             properties:
-              debug:
-                type: boolean
-                description: >-
-                  Set this to prevent the operator from automatically
-                  deleting the corresponding Job and its Pod when the
-                  Job finishes. The Pod wil remain, allowing a developer
-                  to debug its behaviour. The Job and Pod will need to
-                  be deleted manually to avoid filling the namespace with
-                  completed Jobs and Pods.
-              image:
-                type: string
-              command:
-                type: string
-              taskId:
-                type: string
-              projectMount:
-                type: string
-              workingDirectory:
-                type: string
-              workingSubPath:
-                type: string
-              resources:
+              # All DataManger-inject material
+              # will be namespaced by the property 'imDataManager'
+              imDataManager:
                 type: object
                 properties:
-                  limits:
+                  debug:
+                    type: boolean
+                    description: >-
+                      Set this to prevent the operator from automatically
+                      deleting the corresponding Job and its Pod when the
+                      Job finishes. The Pod will remain, allowing a developer
+                      to debug its behaviour. The Job and Pod will need to
+                      be deleted manually to avoid filling the namespace with
+                      completed Jobs and Pods.
+                  image:
+                    type: string
+                  command:
+                    type: string
+                  taskId:
+                    type: string
+                  projectMount:
+                    type: string
+                  workingDirectory:
+                    type: string
+                  workingSubPath:
+                    type: string
+                  resources:
                     type: object
                     properties:
-                      memory:
-                        type: string
-                      storage:
-                        type: string
-                  requests:
+                      limits:
+                        type: object
+                        properties:
+                          memory:
+                            type: string
+                          storage:
+                            type: string
+                      requests:
+                        type: object
+                        properties:
+                          memory:
+                            type: string
+                          storage:
+                            type: string
+                  securityContext:
                     type: object
                     properties:
-                      memory:
+                      runAsUser:
+                        type: integer
+                      runAsGroup:
+                        type: integer
+                      fsGroup:
+                        type: integer
+                  project:
+                    type: object
+                    properties:
+                      claimName:
                         type: string
-                      storage:
+                      id:
                         type: string
-              securityContext:
-                type: object
-                properties:
-                  runAsUser:
-                    type: integer
-                  runAsGroup:
-                    type: integer
-                  fsGroup:
-                    type: integer
-              project:
-                type: object
-                properties:
-                  claimName:
-                    type: string
-                  id:
-                    type: string
+                  labels:
+                    type: array
+                    items:
+                      type: string
