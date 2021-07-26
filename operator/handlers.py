@@ -108,7 +108,7 @@ def create(name, namespace, spec, **_):
         raise kopf.PermanentError('The object must have a spec')
 
     # All Data-Manager provided material
-    # wil be namespaced within the 'imDataManager' property
+    # will be namespaced under the 'imDataManager' property
     material: Dict[str, any] = spec.get('imDataManager', {})
 
     image: str = material.get('image')
