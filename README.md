@@ -66,8 +66,9 @@ To remove the operator (assuming there are no operator-derived instances)...
 The integration, staging and production sites have parameter vaults.
 To deploy there you will need the vault password: -
 
-    $ export PARAMS=staging-parameters
-    $ ansible-playbook -e @${PARAMS}.yaml.vault --ask-vault-password site.yaml
+    $ export PARAMS=staging
+    $ ansible-playbook --ask-vault-pass \
+        -e @${PARAMS}-parameters.yaml.vault
 
 ---
 
