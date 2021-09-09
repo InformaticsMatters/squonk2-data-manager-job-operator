@@ -41,6 +41,12 @@ environment using the requirements in the root of the project...
     $ pip install -r requirements.txt
     $ ansible-galaxy install -r requirements.yaml
 
+Set your KUBECONFIG for the cluster and verify its right: -
+
+    $ export KUBECONFIG=~/my-config
+    $ kubectl get no
+    [...]
+
 Now, create a parameter file (i.e. `parameters.yaml`) based on the project's
 `example-parameters.yaml`, setting values for the operator that match your
 needs. Then deploy, using Ansible, from the root of the project: -
@@ -57,8 +63,8 @@ To remove the operator (assuming there are no operator-derived instances)...
     is described simply to illustrate a 'clean-up' - you would not
     normally remove an Application operator in a production environment.
 
-The staging and production sites have parameter vaults. To deploy there
-you will need the vault password: -
+The integration, staging and production sites have parameter vaults.
+To deploy there you will need the vault password: -
 
     $ export PARAMS=staging-parameters
     $ ansible-playbook -e @${PARAMS}.yaml.vault --ask-vault-password site.yaml
