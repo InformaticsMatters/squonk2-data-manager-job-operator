@@ -67,7 +67,7 @@ The integration, staging and production sites have parameter vaults.
 To deploy there you will need the vault password: -
 
     $ export PARAMS=staging
-    $ ansible-playbook --ask-vault-pass \
+    $ ansible-playbook site.yaml --ask-vault-pass \
         -e @${PARAMS}-parameters.yaml.vault
 
 ---
