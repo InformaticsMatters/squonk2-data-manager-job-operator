@@ -11,10 +11,11 @@ jo_kubeconfig: SetMe
 jo_image: informaticsmatters/data-manager-job-operator
 jo_image_tag: SetMe
 
-# The namespace the Data Manager API is using
-# nd where the operator will be located.
-# This namespace is expected to exist.
-jo_dmapi_namespace: data-manager-api-staging
+# The name (and namespace) of the Data Manager API.
+# The namespace is where the operator will be located,
+# and is expected to exist.
+jo_dmapi_name: integration
+jo_dmapi_namespace: data-manager-api-{{ jo_dmapi_name }}
 
 # The pre-delete delay (seconds) for Pods.
 # After a Pod's finished it's deleted after this period has elapsed.
