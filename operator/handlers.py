@@ -254,7 +254,8 @@ def create(name, namespace, spec, **_):
     # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
     for environment in material.get('environment', []):
         key, value = environment.split('=')
-        pod['spec']['containers'][0]['env'][key] = value
+        pod['spec']['containers'][0]['env'].append({'name': key,
+                                                    'value': value})
 
     # Optional Job working directory and sub-path
     if working_directory:
