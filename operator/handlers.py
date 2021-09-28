@@ -155,7 +155,7 @@ def create(name, namespace, spec, **_):
         "apiVersion": "v1",
         "kind": "ConfigMap",
         "metadata": {
-            "name": "nf-config-%s" % name,
+            "name": f"nf-config-{name}",
             "labels": {
                 "app": name
             }
@@ -237,7 +237,7 @@ def create(name, namespace, spec, **_):
                 {
                     "name": "nf-config",
                     "configMap": {
-                        "name": "nf-config-%s" % name
+                        "name": f"nf-config-{name}"
                     }
                 }
             ]
