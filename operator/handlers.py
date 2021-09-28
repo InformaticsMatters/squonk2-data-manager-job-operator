@@ -250,6 +250,12 @@ def create(name, namespace, spec, **_):
         key, value = label.split('=')
         pod['metadata']['labels'][key] = value
 
+    # Additional environment?
+    # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
+    for environment in material.get('environment', []):
+        key, value = environment.split('=')
+        pod['spec']['containers'][0]['env'][key] = value
+
     # Optional Job working directory and sub-path
     if working_directory:
         path = working_directory
