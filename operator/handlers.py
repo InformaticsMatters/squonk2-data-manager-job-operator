@@ -188,6 +188,9 @@ def create(name, namespace, spec, **_):
         },
         'spec': {
             'serviceAccountName': SA,
+            'nodeSelector': {
+                'informaticsmatters.com/purpose-worker': 'yes'
+            },
             'restartPolicy': 'Never',
             'containers': [{
                 'name': name,
