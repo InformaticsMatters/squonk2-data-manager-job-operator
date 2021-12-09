@@ -1,10 +1,15 @@
 ---
 
+# You shouldn't need to edit this file.
+# You can adjust the configuration using environment variables.
+
+# The Operator image tag
+jo_image_tag: "{{ lookup('env', 'IM_DEV_JOB_O_TAG') | default('1.4.1', True) }}"
+
 # The Data Manager Kubernetes name
 # (used as a suffix for the namespace unless it's explicitly named)
 jo_dmapi_name: local
 jo_dmapi_namespace: data-manager-api
-jo_image_tag: 1.4.1
 jo_namespaces: data-manager-api
 
 # The KUBECONFIG reference.
