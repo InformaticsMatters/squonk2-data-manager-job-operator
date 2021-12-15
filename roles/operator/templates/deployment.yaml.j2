@@ -47,3 +47,16 @@ spec:
           value: '{{ jo_pre_delete_delay_s }}'
         - name: JO_NAMESPACE
           value: '{{ jo_dmapi_namespace }}'
+        resources:
+          requests:
+            cpu: {{ jo_cpu_request }}
+            memory: {{ jo_mem_request }}
+{% if jo_cpu_limit or jo_mem_limit %}
+          limits:
+{% if jo_cpu_limit %}
+            cpu: {{ jo_cpu_limit }}
+{% endif %}
+{% if jo_mem_limit %}
+            memory: {{ jo_mem_limit }}
+{% endif %}
+{% endif %}
