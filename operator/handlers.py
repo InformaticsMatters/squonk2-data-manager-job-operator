@@ -140,6 +140,9 @@ def create(name, namespace, spec, **_):
     project_claim_name = material.get('project', {})\
         .get('claimName', default_project_claim_name)
 
+    # Image pull secret?
+    pull_secret: str = material.get('pullSecret', '')
+
     # ConfigMaps
     # ----------
 
@@ -246,6 +249,10 @@ def create(name, namespace, spec, **_):
             ]
         }
     }
+
+    # Pull secret?
+    if pull_secret:
+        pod['spec']['imagePullSecrets'] = [{'name': pull_secret}]
 
     # Additional labels?
     # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
