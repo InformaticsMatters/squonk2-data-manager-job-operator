@@ -43,6 +43,10 @@ rules:
 - apiGroups: [apps, extensions, '']
   resources: [pods, configmaps]
   verbs: [get, list, watch, create, delete]
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs: ['use']
+  resourceNames: ['{{ jo_sa_psp }}']
 
 ---
 kind: ClusterRoleBinding

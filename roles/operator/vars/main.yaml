@@ -1,5 +1,8 @@
 ---
 
+# The Job Operator Pod Security Policy (PSP)
+jo_sa_psp: im-core-unrestricted
+
 # The Data Manager API Service Account name.
 # This account is expected to exist.
 jo_dmapi_sa: data-manager

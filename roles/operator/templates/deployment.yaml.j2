@@ -25,14 +25,10 @@ spec:
             nodeSelectorTerms:
             - matchExpressions:
               - key: informaticsmatters.com/purpose-application
-                operator: In
-                values:
-                - 'yes'
+                operator: Exists
             - matchExpressions:
               - key: {{ jo_fallback_node_selector_key }}
-                operator: In
-                values:
-                - 'yes'
+                operator: Exists
 
       containers:
       - name: jobs-operator
