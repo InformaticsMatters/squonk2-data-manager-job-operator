@@ -4,6 +4,11 @@
 # This account is expected to exist.
 jo_dmapi_sa: data-manager
 
+# A fallback node-selector key.
+# Some deployments have other labels as selectors.
+# If they're not present the deployment should use this.
+jo_fallback_node_selector_key: informaticsmatters.com/purpose-core
+
 jo_cpu_request: 100m
 jo_mem_request: 128Mi
 jo_cpu_limit: 100m
