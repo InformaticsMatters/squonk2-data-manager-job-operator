@@ -20,6 +20,11 @@ jo_namespaces: data-manager-api-integration
 jo_dmapi_name: integration
 jo_dmapi_namespace: data-manager-api-{{ jo_dmapi_name }}
 
+# Job pod node selection.
+# Jobs wil be run on nodes that have labels keys and values defined here...
+jo_pod_node_selector_key: informaticsmatters.com/purpose-worker
+jo_pod_node_selector_value: 'yes'
+
 # The pre-delete delay (seconds) for Pods.
 # After a Pod's finished it's deleted after this period has elapsed.
 jo_pre_delete_delay_s: 5

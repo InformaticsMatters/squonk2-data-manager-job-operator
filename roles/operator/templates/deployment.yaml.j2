@@ -43,6 +43,10 @@ spec:
           value: '{{ jo_pre_delete_delay_s }}'
         - name: JO_NAMESPACE
           value: '{{ jo_dmapi_namespace }}'
+        - name: JO_POD_NODE_SELECTOR_KEY
+          value: '{{ jo_pod_node_selector_key }}'
+        - name: JO_POD_NODE_SELECTOR_VALUE
+          value: '{{ jo_pod_node_selector_value }}'
         resources:
           requests:
             cpu: {{ jo_cpu_request }}
