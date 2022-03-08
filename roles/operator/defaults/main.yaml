@@ -21,7 +21,7 @@ jo_dmapi_name: integration
 jo_dmapi_namespace: data-manager-api-{{ jo_dmapi_name }}
 
 # Job pod node selection.
-# Jobs wil be run on nodes that have labels keys and values defined here...
+# Jobs will be run on nodes that have labels keys and values defined here...
 jo_pod_node_selector_key: informaticsmatters.com/purpose-worker
 jo_pod_node_selector_value: 'yes'
 
