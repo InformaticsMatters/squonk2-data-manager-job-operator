@@ -16,6 +16,12 @@ import kubernetes
 # any remaining log events.
 _POD_PRE_DELETE_DELAY_S: int = int(os.environ.get('JO_POD_PRE_DELETE_DELAY_S', '5'))
 
+# Job Pod node selection
+_POD_NODE_SELECTOR_KEY: str = os.environ\
+    .get('JO_POD_NODE_SELECTOR_KEY', 'informaticsmatters.com/purpose-worker')
+_POD_NODE_SELECTOR_VALUE: str = os.environ\
+    .get('JO_POD_NODE_SELECTOR_VALUE', 'yes')
+
 # The application SA
 SA = 'data-manager-app'
 
@@ -192,7 +198,7 @@ def create(name, namespace, spec, **_):
         'spec': {
             'serviceAccountName': SA,
             'nodeSelector': {
-                'informaticsmatters.com/purpose-worker': 'yes'
+                _POD_NODE_SELECTOR_KEY: _POD_NODE_SELECTOR_VALUE
             },
             'restartPolicy': 'Never',
             'containers': [{
