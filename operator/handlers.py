@@ -39,7 +39,7 @@ default_fs_group = 1001
 # A ConfigMap written into the directory '$HOME/data-manager.config'
 nextflow_config = """
 process {
-  pod = [ [nodeSelector: 'informaticsmatters.com/purpose-worker=yes'],
+  pod = [ [nodeSelector: '%(selector_key)s=%(selector_value)s'],
           [label: 'data-manager.informaticsmatters.com/instance-id',
            value: '%(name)s'] ]
 }
@@ -159,7 +159,9 @@ def create(name, namespace, spec, **_):
                       'project_id': project_id,
                       'project_mount': project_mount,
                       'sa': SA,
-                      'sc_run_as_user': sc_run_as_user}
+                      'sc_run_as_user': sc_run_as_user,
+                      'selector_key': _POD_NODE_SELECTOR_KEY,
+                      'selector_value': _POD_NODE_SELECTOR_VALUE}
     configmap_dmk = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
