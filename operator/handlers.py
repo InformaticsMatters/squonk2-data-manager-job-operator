@@ -14,7 +14,8 @@ import kubernetes
 # after deciding to delete the Pod before actually deleting it.
 # This delay gives the Data Manager log-watcher an opportunity to collect
 # any remaining log events.
-_POD_PRE_DELETE_DELAY_S: int = int(os.environ.get('JO_POD_PRE_DELETE_DELAY_S', '5'))
+_POD_PRE_DELETE_DELAY_S: int =\
+    int(os.environ.get('JO_POD_PRE_DELETE_DELAY_S', '5'))
 
 # Job Pod node selection
 _POD_NODE_SELECTOR_KEY: str = os.environ\
@@ -36,7 +37,7 @@ default_fs_group = 1001
 
 
 # The Nextflow kubernetes config file.
-# A ConfigMap written into the directory '$HOME/data-manager.config'
+# A ConfigMap written into the working directory, or root.
 nextflow_config = """
 process {
   pod = [ [nodeSelector: '%(selector_key)s=%(selector_value)s'],
@@ -104,6 +105,9 @@ def create(name, namespace, spec, **_):
     project_id = material.get('project', {}).get('id')
     if not project_id:
         raise kopf.PermanentError('project.id is not defined')
+    working_directory = material.get('workingDirectory')
+    if not working_directory:
+        raise kopf.PermanentError('workingDirectory is not defined')
 
     # Get the image tag - to automate the pull policy setting.
     # 'latest' and 'stable' images are always pulled,
@@ -137,9 +141,8 @@ def create(name, namespace, spec, **_):
 
     # The project mount
     project_mount = material.get('projectMount', default_project_mount)
-    # The container working directory and sub-path,
-    # The sub-path is expected (and only used) if there's a working directory.
-    working_directory = material.get('workingDirectory')
+    # The container working directory sub-path.
+    # The sub-path is optional (and only used) if there's a working directory.
     working_sub_path = material.get('workingSubPath')
     # The project claim name and project-id.
     # The project ID must be provided.
@@ -190,6 +193,12 @@ def create(name, namespace, spec, **_):
     # Pod
     # ---
 
+    # Job working directory (including any sub-path).
+    # We mount the nextflow config on this path.
+    working_path = working_directory
+    if working_sub_path:
+        working_path += f'/{working_sub_path}'
+
     pod: Dict[str, Any] = {
         'kind': 'Pod',
         'apiVersion': 'v1',
@@ -207,6 +216,7 @@ def create(name, namespace, spec, **_):
                 'name': name,
                 'image': image,
                 'command': command_items,
+                'workingDir': working_path,
                 'imagePullPolicy': image_pull_policy,
                 'terminationMessagePolicy': 'FallbackToLogsOnError',
                 'env': [{
@@ -231,7 +241,7 @@ def create(name, namespace, spec, **_):
                     },
                     {
                         'name': 'nf-config',
-                        'mountPath': '/code/nextflow.config',
+                        'mountPath': f'{working_path}/nextflow.config',
                         'subPath': 'nextflow.config'
                     }
                 ]
@@ -274,15 +284,6 @@ def create(name, namespace, spec, **_):
         key, value = environment.split('=')
         pod['spec']['containers'][0]['env'].append({'name': key,
                                                     'value': value})
-
-    # Optional Job working directory and sub-path
-    if working_directory:
-        path = working_directory
-        if working_sub_path:
-            path = os.path.join(working_directory, working_sub_path)
-        pod['spec']['containers'][0]['workingDir'] = path
-        logging.warning('spec.workingDirectory is set.'
-                        ' Setting workingDir to %s', path)
 
     # Instructed to debug the Job?
     # Yes if the spec's debug is set.
