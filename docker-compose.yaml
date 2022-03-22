@@ -5,7 +5,7 @@
 # You can control some of the behaviour of the build
 # with environment variables: -
 #
-# - IMAGE_TAG The image version tag (default 19.0.0)
+# - IMAGE_TAG The image version tag (default 19.0.1)
 #
 # Note: The image tag MUST use the major version of the
 #       kubernetes package the operator is built against.
@@ -22,4 +22,4 @@ services:
   operator:
     build:
       context: operator
-    image: informaticsmatters/data-manager-job-operator:${IMAGE_TAG:-19.0.0}
+    image: informaticsmatters/data-manager-job-operator:${IMAGE_TAG:-19.0.1}
