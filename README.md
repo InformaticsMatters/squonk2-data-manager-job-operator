@@ -63,12 +63,11 @@ To remove the operator (assuming there are no operator-derived instances)...
     is described simply to illustrate a 'clean-up' - you would not
     normally remove an Application operator in a production environment.
 
-The integration, staging and production sites have parameter vaults.
-To deploy there you will need the vault password: -
+The integration, staging and production sites have parameter files.
 
+    $ export KUBECONFIG=~/k8s-config/config-aws-im-main-eks
     $ export PARAMS=staging
-    $ ansible-playbook site.yaml --ask-vault-pass \
-        -e @${PARAMS}-parameters.yaml.vault
+    $ ansible-playbook site.yaml -e @${PARAMS}-parameters.yaml
 
 ---
 

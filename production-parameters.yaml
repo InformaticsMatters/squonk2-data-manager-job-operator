@@ -1,0 +1,9 @@
+---
+
+jo_dmapi_name: production
+jo_image_tag: 19.0.1
+jo_namespaces: data-manager-api-staging:data-manager-api-integration:data-manager-api-production
+
+# The Kubernetes config file
+jo_kubeconfig: ~/k8s-config/config-aws-im-main-eks
+
