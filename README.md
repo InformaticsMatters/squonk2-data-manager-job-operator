@@ -15,7 +15,7 @@ to create transient Jobs (Kubernetes Pods) for the Data Manager service.
 
 Prerequisites: -
 
--   Python (ideally 3.9.x)
+-   Python
 -   Docker
 -   A kubernetes config file
 
