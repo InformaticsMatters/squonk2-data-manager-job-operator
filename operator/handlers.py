@@ -79,6 +79,9 @@ def create(name, namespace, spec, **_):
     Kubernetes constantly calling back for a given create.
     """
 
+    logging.info('Starting create (name=%s namespace=%s)...', name, namespace)
+    logging.info('spec=%s (name=%s)', spec, name)
+
     # A PermanentError is raised for any 'do not try this again' problems.
     # There are mandatory properties, that cannot have defaults.
     # The name is the Data Manager instance ID (UUID)
@@ -92,22 +95,33 @@ def create(name, namespace, spec, **_):
     # All Data-Manager provided material
     # will be namespaced under the 'imDataManager' property
     material: Dict[str, any] = spec.get('imDataManager', {})
+    logging.info('material=%s (name=%s)', material, name)
 
     image: str = material.get('image')
     if not image:
-        raise kopf.PermanentError('image is not defined')
+        msg = 'image is not defined'
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
     command: str = material.get('command')
     if not command:
-        raise kopf.PermanentError('command is not defined')
+        msg = 'command is not defined'
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
     task_id: str = material.get('taskId')
     if not task_id:
-        raise kopf.PermanentError('taskId is not defined')
+        msg = 'task_id is not defined'
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
     project_id = material.get('project', {}).get('id')
     if not project_id:
-        raise kopf.PermanentError('project.id is not defined')
+        msg = 'project_id is not defined'
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
     working_directory = material.get('workingDirectory')
     if not working_directory:
-        raise kopf.PermanentError('workingDirectory is not defined')
+        msg = 'working_directory is not defined'
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
 
     # Get the image tag - to automate the pull policy setting.
     # 'latest' and 'stable' images are always pulled,
@@ -155,6 +169,8 @@ def create(name, namespace, spec, **_):
     # ConfigMaps
     # ----------
 
+    logging.info('Creating ConfigMap %s...', name)
+
     # A Nextflow Kubernetes configuration file
     # Written to the Job container as ${HOME}/nextflow.config
     configmap_vars = {'claim_name': project_claim_name,
@@ -192,6 +208,8 @@ def create(name, namespace, spec, **_):
 
     # Pod
     # ---
+
+    logging.info('Creating Pod %s...', name)
 
     # Job working directory (including any sub-path).
     # We mount the nextflow config on this path.
