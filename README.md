@@ -9,6 +9,10 @@
 
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/informaticsmatters/data-manager-job-operator?include_prereleases)
 
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 This repo contains a Kubernetes [Operator] based on the [kopf] and [kubernetes]
 Python packages that is used by the **Informatics Matters Data Manager API**
 to create transient Jobs (Kubernetes Pods) for the Data Manager service.
@@ -18,6 +22,28 @@ Prerequisites: -
 -   Python
 -   Docker
 -   A kubernetes config file
+
+## Contributing
+The project uses: -
+
+- [pre-commit] to enforce linting of files prior to committing them to the
+  upstream repository
+- [Commitizen] to enforce a [Convention Commit] commit message format
+- [Black] as a code formatter
+
+You **MUST** comply with these choices in order to  contribute to the project.
+
+To get started review the pre-commit utility and the conventional commit style
+and then set-up your local clone by following the **Installation** and
+**Quick Start** sections: -
+
+    pip install -r build-requirements.txt
+    pre-commit install -t commit-msg -t pre-commit
+
+Now the project's rules will run on every commit, and you can check the
+current health of your clone with: -
+
+    pre-commit run --all-files
 
 ## Building the operator (local development)
 The operator container, residing in the `operator` directory,
