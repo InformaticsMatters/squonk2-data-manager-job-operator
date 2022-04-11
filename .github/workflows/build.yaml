@@ -44,9 +44,8 @@ jobs:
         ansible-galaxy install -r requirements.yaml
     - name: Lint
       run: |
+        pre-commit run --all-files
         pylint operator/*.py
-        yamllint .
-        find . -type f -name '*.yaml.j2' -exec yamllint {} +
         ansible-lint
     - name: Build
       uses: docker/build-push-action@v2
