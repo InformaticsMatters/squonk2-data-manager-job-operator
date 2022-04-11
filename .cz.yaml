@@ -13,7 +13,7 @@ commitizen:
   # enforcing the use of conventional commits.
   # Prior to 19.0.4 we weren't using it on every commit
   # and didn't have everything ready for change-logs.
-  changelog_start_rev: 19.0.4
+  changelog_start_rev: 19.0.3
   customize:
     schema_pattern: "^(?P<change_type>feat|fix|perf|refactor|style|test|build|docs|ci|BREAKING CHANGE)(?:\\((?P<scope>[^()\\r\\n]*)\\)|\\()?(?P<breaking>!)?:\\s(?P<message>.*)?"
     commit_parser: "^(?P<change_type>feat|fix|perf|refactor|style|test|build|docs|ci|BREAKING CHANGE)(?:\\((?P<scope>[^()\\r\\n]*)\\)|\\()?(?P<breaking>!)?:\\s(?P<message>.*)?"
