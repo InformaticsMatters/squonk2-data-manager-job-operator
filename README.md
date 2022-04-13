@@ -13,6 +13,8 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+[![Dev Stage: 1](https://img.shields.io/badge/dev%20stage-&#9733;&#9734;&#9734;%20%281%29-dc332e)](https://github.com/InformaticsMatters/code-repository-development-stages)
+
 This repo contains a Kubernetes [Operator] based on the [kopf] and [kubernetes]
 Python packages that is used by the **Informatics Matters Data Manager API**
 to create transient Jobs (Kubernetes Pods) for the Data Manager service.
