@@ -44,8 +44,14 @@ repos:
   hooks:
   - id: mypy
     files: ^operator
+# Pylint
+- repo: https://github.com/pycqa/pylint
+  rev: v2.13.5
+  hooks:
+  - id: pylint
+    files: ^operator
 # YAML Lint
-# We have to adjust this hook, whcih looks for yaml files,
+# We have to adjust this hook, which looks for yaml files,
 # because some of our files are 'disguised' and not found by
 # 'identify', used by pre-commit. So we basically say...
 # All files that end '.yaml' or '.yaml.j2'
