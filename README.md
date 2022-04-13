@@ -28,7 +28,7 @@ The project uses: -
 
 - [pre-commit] to enforce linting of files prior to committing them to the
   upstream repository
-- [Commitizen] to enforce a [Convention Commit] commit message format
+- [Commitizen] to enforce a [Conventional Commit] commit message format
 - [Black] as a code formatter
 
 You **MUST** comply with these choices in order to  contribute to the project.
@@ -52,8 +52,8 @@ is automatically built and pushed to Docker Hub using GitHub Actions.
 You can build the image yourself using docker-compose.
 The following will build an operator image with the tag `19.0.0-alpha.1`: -
 
-    $ export IMAGE_TAG=19.0.0-alpha.1
-    $ docker-compose build
+    export IMAGE_TAG=19.0.0-alpha.1
+    docker-compose build
 
 ## Deploying into the Data Manager API
 We use [Ansible] 4 and community modules in [Ansible Galaxy] as the deployment
@@ -61,28 +61,28 @@ mechanism, using the `operator` Ansible role in this repository and a
 Kubernetes config (KUBECONFIG). All of this is done via a suitable Python
 environment using the requirements in the root of the project...
 
-    $ python -m venv ~/.venv/data-manager-job-operator
-    $ source ~/.venv/data-manager-job-operator/bin/activate
-    $ pip install --upgrade pip
-    $ pip install -r requirements.txt
-    $ ansible-galaxy install -r requirements.yaml
+    python -m venv ~/.venv/data-manager-job-operator
+    source ~/.venv/data-manager-job-operator/bin/activate
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    ansible-galaxy install -r requirements.yaml
 
 Set your KUBECONFIG for the cluster and verify its right: -
 
-    $ export KUBECONFIG=~/k8s-config/local-config
-    $ kubectl get no
+    export KUBECONFIG=~/k8s-config/local-config
+    kubectl get no
     [...]
 
 Now, create a parameter file (i.e. `parameters.yaml`) based on the project's
 `example-parameters.yaml`, setting values for the operator that match your
 needs. Then deploy, using Ansible, from the root of the project: -
 
-    $ export PARAMS=parameters
-    $ ansible-playbook -e @${PARAMS}.yaml site.yaml
+    export PARAMS=parameters
+    ansible-playbook -e @${PARAMS}.yaml site.yaml
 
 To remove the operator (assuming there are no operator-derived instances)...
 
-    $ ansible-playbook -e @${PARAMS}.yaml -e jo_state=absent site.yaml
+    ansible-playbook -e @${PARAMS}.yaml -e jo_state=absent site.yaml
 
 >   The current Data Manager API assumes that once an Application (operator)
     has been installed it is not removed. So, removing the operator here
@@ -91,14 +91,18 @@ To remove the operator (assuming there are no operator-derived instances)...
 
 The integration, staging and production sites have parameter files.
 
-    $ export KUBECONFIG=~/k8s-config/config-aws-im-main-eks
-    $ export PARAMS=staging
-    $ ansible-playbook site.yaml -e @${PARAMS}-parameters.yaml
+    export KUBECONFIG=~/k8s-config/config-aws-im-main-eks
+    export PARAMS=staging
+    ansible-playbook site.yaml -e @${PARAMS}-parameters.yaml
 
 ---
 
 [ansible]: https://pypi.org/project/ansible/
 [ansible galaxy]: https://galaxy.ansible.com
+[black]: https://pypi.org/project/black/
+[commitizen]: https://pypi.org/project/commitizen
+[conventional commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [kopf]: https://pypi.org/project/kopf/
 [kubernetes]: https://pypi.org/project/kubernetes/
 [operator]: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
+[pre-commit]: https://pre-commit.com
