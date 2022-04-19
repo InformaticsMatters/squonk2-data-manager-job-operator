@@ -7,13 +7,11 @@ LABEL maintainer='Alan Christie <achristie@informaticsmatters.com>'
 # to be unbuffered
 ENV PYTHONUNBUFFERED 1
 
-# Namespaced operator.
-ENV JO_NAMESPACE data-manager-api
-
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 WORKDIR /src
 COPY handlers.py /src/
+COPY entrypoint.sh /src/
 
-CMD kopf run ./handlers.py --verbose --log-format=full --namespace=${JO_NAMESPACE}
+CMD ./entrypoint.sh
