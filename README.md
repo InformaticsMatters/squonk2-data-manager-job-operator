@@ -1,6 +1,6 @@
-# A Job Operator (for the Data Manager API)
+# The Data Manager Job Operator
 
-[![Data Manager: Operator](https://img.shields.io/badge/data%20manager-operator-000000?labelColor=dc332e)]()
+[![Data Manager: Operator](https://img.shields.io/badge/data%20manager-job%20operator-000000?labelColor=dc332e)]()
 [![Dev Stage: 1](https://img.shields.io/badge/dev%20stage-★☆☆%20%281%29-000000?labelColor=dc332e)](https://github.com/InformaticsMatters/code-repository-development-stages)
 
 [![build](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build.yaml/badge.svg)](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build.yaml)
