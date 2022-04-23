@@ -1,5 +1,8 @@
 # A Job Operator (for the Data Manager API)
 
+[![Data Manager: Operator](https://img.shields.io/badge/data%20manager-operator-000000?labelColor=dc332e)]()
+[![Dev Stage: 1](https://img.shields.io/badge/dev%20stage-★☆☆%20%281%29-000000?labelColor=dc332e)](https://github.com/InformaticsMatters/code-repository-development-stages)
+
 [![build](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build.yaml/badge.svg)](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build.yaml)
 [![build latest](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build-latest.yaml/badge.svg)](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build-latest.yaml)
 [![build tag](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build-tag.yaml/badge.svg)](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build-tag.yaml)
@@ -13,7 +16,6 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-[![Dev Stage: 1](https://img.shields.io/badge/dev%20stage-&#9733;&#9734;&#9734;%20%281%29-dc332e)](https://github.com/InformaticsMatters/code-repository-development-stages)
 
 This repo contains a Kubernetes [Operator] based on the [kopf] and [kubernetes]
 Python packages that is used by the **Informatics Matters Data Manager API**
