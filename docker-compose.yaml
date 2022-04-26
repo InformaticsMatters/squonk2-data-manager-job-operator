@@ -13,8 +13,8 @@
 #
 # i.e.: -
 #
-#   IMAGE_TAG=19.0.0-alpha.1 docker-compose build
-#   IMAGE_TAG=19.0.0-alpha.1 docker-compose push
+#   IMAGE_TAG=19.2.0-alpha.1 docker-compose build
+#   IMAGE_TAG=19.2.0-alpha.1 docker-compose push
 
 version: '3.8'
 
@@ -22,4 +22,4 @@ services:
   operator:
     build:
       context: operator
-    image: informaticsmatters/data-manager-job-operator:${IMAGE_TAG:-19.0.1}
+    image: informaticsmatters/data-manager-job-operator:${IMAGE_TAG:-19.1.0}

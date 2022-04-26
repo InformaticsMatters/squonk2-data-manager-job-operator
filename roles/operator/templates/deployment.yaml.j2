@@ -2,21 +2,21 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  namespace: {{ jo_dmapi_namespace }}
-  name: jobs-operator
+  namespace: {{ jo_namespace }}
+  name: job-operator
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      application: jobs-operator
+      application: job-operator
   template:
     metadata:
       labels:
-        application: jobs-operator
+        application: job-operator
     spec:
-      serviceAccountName: jobs-account
+      serviceAccountName: job-operator
 
       # Prefer 'application' nodes before 'core'
       affinity:
@@ -31,7 +31,7 @@ spec:
                 operator: Exists
 
       containers:
-      - name: jobs-operator
+      - name: job-operator
         image: {{ jo_image }}:{{ jo_image_tag }}
 {% if jo_image_tag in ['stable', 'latest'] %}
         imagePullPolicy: Always
@@ -41,8 +41,6 @@ spec:
         env:
         - name: JO_POD_PRE_DELETE_DELAY_S
           value: '{{ jo_pre_delete_delay_s }}'
-        - name: JO_NAMESPACE
-          value: '{{ jo_dmapi_namespace }}'
         - name: JO_POD_NODE_SELECTOR_KEY
           value: '{{ jo_pod_node_selector_key }}'
         - name: JO_POD_NODE_SELECTOR_VALUE

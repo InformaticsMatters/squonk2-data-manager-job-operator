@@ -16,7 +16,6 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-
 This repo contains a Kubernetes [Operator] based on the [kopf] and [kubernetes]
 Python packages that is used by the **Informatics Matters Data Manager API**
 to create transient Jobs (Kubernetes Pods) for the Data Manager service.
@@ -54,9 +53,9 @@ The operator container, residing in the `operator` directory,
 is automatically built and pushed to Docker Hub using GitHub Actions.
 
 You can build the image yourself using docker-compose.
-The following will build an operator image with the tag `19.0.0-alpha.1`: -
+The following will build an operator image with the tag `19.2.0-alpha.1`: -
 
-    export IMAGE_TAG=19.0.0-alpha.1
+    export IMAGE_TAG=19.2.0-alpha.1
     docker-compose build
 
 ## Deploying into the Data Manager API
@@ -65,15 +64,15 @@ mechanism, using the `operator` Ansible role in this repository and a
 Kubernetes config (KUBECONFIG). All of this is done via a suitable Python
 environment using the requirements in the root of the project...
 
-    python -m venv ~/.venv/data-manager-job-operator
-    source ~/.venv/data-manager-job-operator/bin/activate
+    python -m venv venv
+    source venv/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
     ansible-galaxy install -r requirements.yaml
 
 Set your KUBECONFIG for the cluster and verify its right: -
 
-    export KUBECONFIG=~/k8s-config/local-config
+    export KUBECONFIG=~/k8s-config/config-local
     kubectl get no
     [...]
 
@@ -81,7 +80,7 @@ Now, create a parameter file (i.e. `parameters.yaml`) based on the project's
 `example-parameters.yaml`, setting values for the operator that match your
 needs. Then deploy, using Ansible, from the root of the project: -
 
-    export PARAMS=parameters
+    PARAMS=parameters
     ansible-playbook -e @${PARAMS}.yaml site.yaml
 
 To remove the operator (assuming there are no operator-derived instances)...

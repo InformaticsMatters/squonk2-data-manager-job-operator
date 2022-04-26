@@ -1,8 +1,8 @@
 ---
 
-jo_dmapi_name: production
-jo_image_tag: 19.0.3
-jo_namespaces: data-manager-api-production
+jo_image_tag: 19.1.0
+jo_dmapi_namespace: data-manager-api-prod
+
 jo_pod_node_selector_key: purpose
 jo_pod_node_selector_value: application
 jo_fallback_node_selector_key: informaticsmatters.com/purpose

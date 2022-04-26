@@ -66,7 +66,7 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
 
 
-@kopf.on.create("squonk.it", "v1", "datamanagerjobs")
+@kopf.on.create("squonk.it", "v2", "datamanagerjobs")
 def create(name, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
@@ -316,7 +316,7 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "", "v1", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
+    "", "v2", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
 )
 def job_event(event, **_):
     """An event handler for Pods that we created -
