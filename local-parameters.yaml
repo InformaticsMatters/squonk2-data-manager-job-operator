@@ -1,7 +1,5 @@
 ---
 
-# The Data Manager Kubernetes name
-# (used as a suffix for the namespace unless it's explicitly named)
 jo_image_tag: 19.1.0
 jo_dmapi_namespace: data-manager-api
 
