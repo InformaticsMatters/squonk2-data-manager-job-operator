@@ -13,7 +13,7 @@ jo_image_tag: SetMe
 
 # The namespace of the Job Operator.
 jo_namespace: data-manager-job-operator
-# The namespace of the Data Manager API we're about to deploy to.
+# The namespace of the Data Manager API.
 jo_dmapi_namespace: data-manager-api
 
 # Job pod node selection.
