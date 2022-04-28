@@ -30,14 +30,14 @@ default_cpu: str = "1"
 default_memory: str = "1Gi"
 default_project_mount: str = "/project"
 default_project_claim_name: str = "project"
-default_user_id = 1001
-default_group_id = 1001
-default_fs_group = 1001
+default_user_id: int = 1001
+default_group_id: int = 1001
+default_fs_group: int = 1001
 
 
 # The Nextflow kubernetes config file.
 # A ConfigMap written into the working directory, or root.
-nextflow_config = """
+nextflow_config: str = """
 process {
   pod = [ [nodeSelector: '%(selector_key)s=%(selector_value)s'],
           [label: 'data-manager.informaticsmatters.com/instance-id',
