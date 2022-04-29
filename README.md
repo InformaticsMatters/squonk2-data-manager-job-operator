@@ -3,7 +3,7 @@
 [![Data Manager: Operator](https://img.shields.io/badge/data%20manager-job%20operator-000000?labelColor=dc332e)]()
 [![Dev Stage: 1](https://img.shields.io/badge/dev%20stage-★☆☆%20%281%29-000000?labelColor=dc332e)](https://github.com/InformaticsMatters/code-repository-development-stages)
 
-![Platform](https://img.shields.io/badge/architecture-amd64%20%7C%20arm64-lightgrey)
+![Architecture](https://img.shields.io/badge/architecture-amd64%20%7C%20arm64-lightgrey)
 
 [![build](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build.yaml/badge.svg)](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build.yaml)
 [![build latest](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build-latest.yaml/badge.svg)](https://github.com/informaticsmatters/data-manager-job-operator/actions/workflows/build-latest.yaml)
