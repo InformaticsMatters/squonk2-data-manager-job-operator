@@ -9,7 +9,7 @@ You will now need: -
 
 - This repository (but you'll have that already)
 - Python 3
-- [lens]
+- A [kubectl] that matches your cluster
 
 ## Create an environment for the Ansible playbooks
 You will need a Python virtual environment for ansible playbook execution.
@@ -50,4 +50,5 @@ To see something like this...
 ---
 
 [docker desktop]: https://www.docker.com/products/docker-desktop/
-[minikube]: https://minikube.sigs.k8s.io/docs/start/
+[kubectl]: https://kubernetes.io/docs/tasks/tools
+[minikube]: https://minikube.sigs.k8s.io/docs/start
