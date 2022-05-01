@@ -49,4 +49,5 @@ To see something like this...
 
 ---
 
+[docker desktop]: https://www.docker.com/products/docker-desktop/
 [minikube]: https://minikube.sigs.k8s.io/docs/start/
