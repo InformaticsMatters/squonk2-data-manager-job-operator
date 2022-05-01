@@ -55,10 +55,11 @@ The operator container, residing in the `operator` directory,
 is automatically built and pushed to Docker Hub using GitHub Actions.
 
 You can build the image yourself using docker-compose.
-The following will build an operator image with the tag `19.2.0-alpha.1`: -
+The following will build and push an operator image with the tag `19.2.0-alpha.1`: -
 
     export IMAGE_TAG=19.2.0-alpha.1
     docker-compose build
+    docker-compose push
 
 ## Deploying into the Data Manager API
 We use [Ansible] 4 and community modules in [Ansible Galaxy] as the deployment
