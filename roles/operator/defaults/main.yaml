@@ -14,6 +14,7 @@ jo_image_tag: SetMe
 # The namespace of the Job Operator.
 jo_namespace: data-manager-job-operator
 # The namespace of the Data Manager API.
+# It's here we deploy the 'rbac-data-manager' objects.
 jo_dmapi_namespace: data-manager-api
 
 # Job pod node selection.
