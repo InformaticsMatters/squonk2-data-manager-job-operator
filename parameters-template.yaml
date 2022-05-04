@@ -4,13 +4,10 @@
 # You can adjust the configuration using environment variables.
 
 # The Operator image tag
-jo_image_tag: "{{ lookup('env', 'IM_DEV_JOB_O_TAG') | default('19.0.1', True) }}"
+jo_image_tag: "{{ lookup('env', 'IM_DEV_JOB_O_TAG') | default('19.2.0', True) }}"
 
-# The Data Manager Kubernetes name
-# (used as a suffix for the namespace unless it's explicitly named)
-jo_dmapi_name: local
+jo_namespace: data-manager-job-operator
 jo_dmapi_namespace: data-manager-api
-jo_namespaces: data-manager-api
 
 # The KUBECONFIG reference.
 # Used outside of AWX to set kubernetes credentials.

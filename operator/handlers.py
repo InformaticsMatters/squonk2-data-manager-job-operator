@@ -30,14 +30,14 @@ default_cpu: str = "1"
 default_memory: str = "1Gi"
 default_project_mount: str = "/project"
 default_project_claim_name: str = "project"
-default_user_id = 1001
-default_group_id = 1001
-default_fs_group = 1001
+default_user_id: int = 1001
+default_group_id: int = 1001
+default_fs_group: int = 1001
 
 
 # The Nextflow kubernetes config file.
 # A ConfigMap written into the working directory, or root.
-nextflow_config = """
+nextflow_config: str = """
 process {
   pod = [ [nodeSelector: '%(selector_key)s=%(selector_value)s'],
           [label: 'data-manager.informaticsmatters.com/instance-id',
@@ -66,7 +66,7 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
 
 
-@kopf.on.create("squonk.it", "v1", "datamanagerjobs")
+@kopf.on.create("squonk.it", "v2", "datamanagerjobs")
 def create(name, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
@@ -316,7 +316,7 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "", "v1", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
+    "", "v2", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
 )
 def job_event(event, **_):
     """An event handler for Pods that we created -
