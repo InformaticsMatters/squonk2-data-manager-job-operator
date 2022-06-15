@@ -39,7 +39,8 @@ default_fs_group: int = 1001
 # A ConfigMap written into the working directory, or root.
 nextflow_config: str = """
 process {
-  pod = [ [nodeSelector: '%(selector_key)s=%(selector_value)s'],
+  pod = [ %(extra_pod_settings)s
+          [nodeSelector: '%(selector_key)s=%(selector_value)s'],
           [label: 'data-manager.informaticsmatters.com/instance-id',
            value: '%(name)s'] ]
 }
@@ -177,9 +178,19 @@ def create(name, namespace, spec, **_):
 
     logging.info("Creating ConfigMap %s...", name)
 
+    # Do we need to provide extra Pod declaration settings?
+    # For example, is there an image-pull-secret - if so
+    # we add it to the nextflow.config to ensure all nextflow processes
+    # have access to it.
+    extra_pod_settings = ""
+    if pull_secret:
+        # If the main image has a pull-secret, put it in the config
+        # so the other process pods in the nextflow workflow can use it.
+        extra_pod_settings += f"[imagePullSecret: '{pull_secret}'],\n"
     # A Nextflow Kubernetes configuration file
     # Written to the Job container as ${HOME}/nextflow.config
     configmap_vars = {
+        "extra_pod_settings": extra_pod_settings,
         "claim_name": project_claim_name,
         "name": name,
         "project_id": project_id,
