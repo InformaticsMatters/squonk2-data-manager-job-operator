@@ -63,6 +63,12 @@ def configure(settings: kopf.OperatorSettings, **_):
     # Here we adjust the logging level
     settings.posting.level = logging.INFO
 
+    # Attempt to protect ourselves from missing watch events.
+    # See https://github.com/nolar/kopf/issues/698
+    # Added in an attempt to prevent the operator "falling silent"
+    settings.watching.server_timeout = 120
+    settings.watching.client_timeout = 150
+
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
 
 
