@@ -22,6 +22,9 @@ _POD_NODE_SELECTOR_KEY: str = os.environ.get(
 )
 _POD_NODE_SELECTOR_VALUE: str = os.environ.get("JO_POD_NODE_SELECTOR_VALUE", "yes")
 
+# Default queue size?
+_NF_EXECUTOR_QUEUE_SIZE: int = int(os.environ.get("JO_NF_EXECUTOR_QUEUE_SIZE", "100"))
+
 # The application SA
 SA = "data-manager-app"
 
@@ -46,6 +49,7 @@ process {
 }
 executor {
   name = 'k8s'
+  queueSize = %(executor_queue_size)s
 }
 k8s {
   serviceAccount = '%(sa)s'
@@ -196,6 +200,7 @@ def create(name, namespace, spec, **_):
     # A Nextflow Kubernetes configuration file
     # Written to the Job container as ${HOME}/nextflow.config
     configmap_vars = {
+        "executor_queue_size": _NF_EXECUTOR_QUEUE_SIZE,
         "extra_pod_settings": extra_pod_settings,
         "claim_name": project_claim_name,
         "name": name,
