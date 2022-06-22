@@ -244,9 +244,11 @@ def create(name, namespace, spec, **_):
         configmap_file = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
-            "metadata": {"name": cm_name,
-                         "labels": {"app": name},
-                         "annotations": {"origin": image_file["origin"]}},
+            "metadata": {
+                "name": cm_name,
+                "labels": {"app": name},
+                "annotations": {"origin": image_file["origin"]},
+            },
             "data": {file_name: image_file["content"]},
         }
 
@@ -362,14 +364,16 @@ def create(name, namespace, spec, **_):
         file_name: str = os.path.basename(image_file["name"])
         cm_name: str = f"file-{file_number}-{name}"
         # Extend the 'volumes' list...
-        pod["spec"]["volumes"].append({"name": f"file-{file_number}",
-                                  "configMap": {"name": cm_name}})\
-        # ...and the corresponding container mounts...
-        pod["spec"]["containers"][0]["volumeMounts"].append({
-                            "name": f"file-{file_number}",
-                            "mountPath": image_file["name"],
-                            "subPath": file_name,
-                        })
+        pod["spec"]["volumes"].append(
+            {"name": f"file-{file_number}", "configMap": {"name": cm_name}}
+        )  # ...and the corresponding container mounts...
+        pod["spec"]["containers"][0]["volumeMounts"].append(
+            {
+                "name": f"file-{file_number}",
+                "mountPath": image_file["name"],
+                "subPath": file_name,
+            }
+        )
 
     # Definition's complete - adopt it and create it.
     # Pods are part of the Core V1 API
