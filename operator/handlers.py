@@ -77,7 +77,7 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
 
 
-@kopf.on.create("squonk.it", "v2", "datamanagerjobs")
+@kopf.on.create("squonk.it", "v3", "datamanagerjobs")
 def create(name, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
@@ -229,6 +229,37 @@ def create(name, namespace, spec, **_):
 
     logging.info("Created ConfigMap %s", name)
 
+    # Any files to inject into the image?
+    # If so they have a 'name', 'content' and 'origin'.
+    # The name is expected to be a qualified path like '/usr/local/blob.txt'.
+    # We create a ConfigMap for each.
+
+    image_files: List[Dict[str, str]] = material.get("file", [])
+    file_number: int = 0
+    for image_file in image_files:
+
+        file_number += 1
+        file_name: str = os.path.basename(image_file["name"])
+        cm_name: str = f"file-{file_number}-{name}"
+        configmap_file = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {"name": cm_name,
+                         "labels": {"app": name},
+                         "annotations": {"origin": image_file["origin"]}},
+            "data": {file_name: image_file["content"]},
+        }
+
+        kopf.adopt(configmap_file)
+        try:
+            core_api.create_namespaced_config_map(namespace, configmap_file)
+        except kubernetes.client.exceptions.ApiException as ex:
+            # Whatever has happened treat it as a 'PermanentError',
+            # thus preventing the operator from constantly re-trying.
+            raise kopf.PermanentError(f"ApiException ({ex.status})")
+
+        logging.info("Created ConfigMap %s", cm_name)
+
     # Pod
     # ---
 
@@ -322,10 +353,27 @@ def create(name, namespace, spec, **_):
         )
         pod["metadata"]["labels"]["debug"] = "yes"
 
-    # Definition's complete - adopt it.
-    kopf.adopt(pod)
+    # Files?
+    # If so add appropriate volumes and mounts
+    # using the config map we'll have created earlier.
+    file_number: int = 0
+    for image_file in image_files:
+        file_number += 1
+        file_name: str = os.path.basename(image_file["name"])
+        cm_name: str = f"file-{file_number}-{name}"
+        # Extend the 'volumes' list...
+        pod["spec"]["volumes"].append({"name": f"file-{file_number}",
+                                  "configMap": {"name": cm_name}})\
+        # ...and the corresponding container mounts...
+        pod["spec"]["containers"][0]["volumeMounts"].append({
+                            "name": f"file-{file_number}",
+                            "mountPath": image_file["name"],
+                            "subPath": file_name,
+                        })
 
-    # Noe create it - Pods are part of the Core V1 API
+    # Definition's complete - adopt it and create it.
+    # Pods are part of the Core V1 API
+    kopf.adopt(pod)
     api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
     try:
         api.create_namespaced_pod(body=pod, namespace=namespace)
@@ -338,7 +386,7 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "", "v2", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
+    "", "v3", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
 )
 def job_event(event, **_):
     """An event handler for Pods that we created -
