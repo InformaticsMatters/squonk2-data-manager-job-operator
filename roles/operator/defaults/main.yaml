@@ -22,6 +22,9 @@ jo_dmapi_namespace: data-manager-api
 jo_pod_node_selector_key: informaticsmatters.com/purpose-worker
 jo_pod_node_selector_value: 'yes'
 
+# Nextflow executor queue size?
+jo_nf_executor_queue_size: 100
+
 # The pre-delete delay (seconds) for Pods.
 # After a Pod's finished it's deleted after this period has elapsed.
 jo_pre_delete_delay_s: 5
