@@ -61,6 +61,21 @@ The following will build and push an operator image with the tag `19.2.0-alpha.1
     docker-compose build
     docker-compose push
 
+## Versioning
+We adopt a different approach for operator naming. At the time of writing
+we were on version 19 and major changes do not result in changes to this
+number. **Why?**
+
+The major revision is actually used to identify the Kubernetes 1.x release the
+operator is built against. So the `19.x.x` operator is built using
+the Python 19.x Kubernetes package.
+
+>   See the `kubernetes` package version in `operator/requrements.txt`.
+
+When we make major/significant changes we update the **minor** value
+and for bug-fixes we adjust the **patch** value. So, for a build against
+Kuberntes 1.19 our **major** version will always be `19`.
+
 ## Deploying into the Data Manager API
 We use [Ansible] 4 and community modules in [Ansible Galaxy] as the deployment
 mechanism, using the `operator` Ansible role in this repository and a
