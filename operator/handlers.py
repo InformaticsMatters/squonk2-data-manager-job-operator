@@ -57,6 +57,7 @@ executor {
   queueSize = %(executor_queue_size)s
 }
 k8s {
+  computeResourceType = 'Job'
   serviceAccount = '%(sa)s'
   runAsUser = %(sc_run_as_user)s
   storageClaimName = '%(claim_name)s'
