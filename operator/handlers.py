@@ -25,12 +25,17 @@ _POD_NODE_SELECTOR_VALUE: str = os.environ.get("JO_POD_NODE_SELECTOR_VALUE", "ye
 # Default queue size?
 _NF_EXECUTOR_QUEUE_SIZE: int = int(os.environ.get("JO_NF_EXECUTOR_QUEUE_SIZE", "100"))
 
+# Default CPU and MEM using Kubernetes units
+# (applies to default requests and limits)
+_POD_DEFAULT_CPU: str = os.environ.get("JO_POD_DEFAULT_CPU", "1")
+_POD_DEFAULT_MEMORY: str = os.environ.get("JO_POD_DEFAULT_MEMORY", "1Gi")
+
 # The application SA
 SA = "data-manager-app"
 
 # Some (key) default variables...
-default_cpu: str = "1"
-default_memory: str = "1Gi"
+default_cpu: str = _POD_DEFAULT_CPU
+default_memory: str = _POD_DEFAULT_MEMORY
 default_project_mount: str = "/project"
 default_project_claim_name: str = "project"
 default_user_id: int = 1001
@@ -74,6 +79,11 @@ def configure(settings: kopf.OperatorSettings, **_):
     settings.watching.server_timeout = 120
     settings.watching.client_timeout = 150
 
+    logging.info("Startup _NF_EXECUTOR_QUEUE_SIZE=%s", _NF_EXECUTOR_QUEUE_SIZE)
+    logging.info("Startup _POD_DEFAULT_CPU=%s", _POD_DEFAULT_CPU)
+    logging.info("Startup _POD_DEFAULT_MEMORY=%s", _POD_DEFAULT_MEMORY)
+    logging.info("Startup _POD_NODE_SELECTOR_KEY=%s", _POD_NODE_SELECTOR_KEY)
+    logging.info("Startup _POD_NODE_SELECTOR_VALUE=%s", _POD_NODE_SELECTOR_VALUE)
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
 
 
