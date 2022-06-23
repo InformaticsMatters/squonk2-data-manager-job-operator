@@ -122,6 +122,11 @@ def create(name, namespace, spec, **_):
         msg = "image is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
+    image_type: str = material.get("imageType")
+    if not image_type:
+        msg = "imageType is not defined"
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
     command: str = material.get("command")
     if not command:
         msg = "command is not defined"
@@ -199,46 +204,48 @@ def create(name, namespace, spec, **_):
 
     logging.info("Creating ConfigMap %s...", name)
 
-    # Do we need to provide extra Pod declaration settings?
-    # For example, is there an image-pull-secret - if so
-    # we add it to the nextflow.config to ensure all nextflow processes
-    # have access to it.
-    extra_pod_settings = ""
-    if pull_secret:
-        # If the main image has a pull-secret, put it in the config
-        # so the other process pods in the nextflow workflow can use it.
-        extra_pod_settings += f"[imagePullSecret: '{pull_secret}'],\n"
-    # A Nextflow Kubernetes configuration file
-    # Written to the Job container as ${HOME}/nextflow.config
-    configmap_vars = {
-        "executor_queue_size": _NF_EXECUTOR_QUEUE_SIZE,
-        "extra_pod_settings": extra_pod_settings,
-        "claim_name": project_claim_name,
-        "name": name,
-        "project_id": project_id,
-        "project_mount": project_mount,
-        "sa": SA,
-        "sc_run_as_user": sc_run_as_user,
-        "selector_key": _POD_NODE_SELECTOR_KEY,
-        "selector_value": _POD_NODE_SELECTOR_VALUE,
-    }
-    configmap_dmk = {
-        "apiVersion": "v1",
-        "kind": "ConfigMap",
-        "metadata": {"name": f"nf-config-{name}", "labels": {"app": name}},
-        "data": {"nextflow.config": nextflow_config % configmap_vars},
-    }
+    if image_type.lower() == "nextflow":
 
-    kopf.adopt(configmap_dmk)
-    core_api = kubernetes.client.CoreV1Api()
-    try:
-        core_api.create_namespaced_config_map(namespace, configmap_dmk)
-    except kubernetes.client.exceptions.ApiException as ex:
-        # Whatever has happened treat it as a 'PermanentError',
-        # thus preventing the operator from constantly re-trying.
-        raise kopf.PermanentError(f"ApiException ({ex.status})")
+        # Do we need to provide extra Pod declaration settings?
+        # For example, is there an image-pull-secret - if so
+        # we add it to the nextflow.config to ensure all nextflow processes
+        # have access to it.
+        extra_pod_settings = ""
+        if pull_secret:
+            # If the main image has a pull-secret, put it in the config
+            # so the other process pods in the nextflow workflow can use it.
+            extra_pod_settings += f"[imagePullSecret: '{pull_secret}'],\n"
+        # A Nextflow Kubernetes configuration file
+        # Written to the Job container as ${HOME}/nextflow.config
+        configmap_vars = {
+            "executor_queue_size": _NF_EXECUTOR_QUEUE_SIZE,
+            "extra_pod_settings": extra_pod_settings,
+            "claim_name": project_claim_name,
+            "name": name,
+            "project_id": project_id,
+            "project_mount": project_mount,
+            "sa": SA,
+            "sc_run_as_user": sc_run_as_user,
+            "selector_key": _POD_NODE_SELECTOR_KEY,
+            "selector_value": _POD_NODE_SELECTOR_VALUE,
+        }
+        configmap_dmk = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {"name": f"nf-config-{name}", "labels": {"app": name}},
+            "data": {"nextflow.config": nextflow_config % configmap_vars},
+        }
 
-    logging.info("Created ConfigMap %s", name)
+        kopf.adopt(configmap_dmk)
+        core_api = kubernetes.client.CoreV1Api()
+        try:
+            core_api.create_namespaced_config_map(namespace, configmap_dmk)
+        except kubernetes.client.exceptions.ApiException as ex:
+            # Whatever has happened treat it as a 'PermanentError',
+            # thus preventing the operator from constantly re-trying.
+            raise kopf.PermanentError(f"ApiException ({ex.status})")
+
+        logging.info("Created ConfigMap %s", name)
 
     # Any files to inject into the image?
     # If so they have a 'name', 'content' and 'origin'.
@@ -316,11 +323,6 @@ def create(name, namespace, spec, **_):
                             "mountPath": project_mount,
                             "subPath": project_id,
                         },
-                        {
-                            "name": "nf-config",
-                            "mountPath": f"{working_path}/nextflow.config",
-                            "subPath": "nextflow.config",
-                        },
                     ],
                 }
             ],
@@ -334,7 +336,6 @@ def create(name, namespace, spec, **_):
                     "name": "project",
                     "persistentVolumeClaim": {"claimName": project_claim_name},
                 },
-                {"name": "nf-config", "configMap": {"name": f"nf-config-{name}"}},
             ],
         },
     }
@@ -365,6 +366,21 @@ def create(name, namespace, spec, **_):
             " will not be automatically deleted"
         )
         pod["metadata"]["labels"]["debug"] = "yes"
+
+    # If it's a nextflow image type
+    # add the nextflow config to the Pod.
+    if image_type.lower() == "nextflow":
+        # Extend the 'volumes' list...
+        pod["spec"]["volumes"].append(
+            {"name": "nf-config", "configMap": {"name": f"nf-config-{name}"}}
+        )  # ...and the corresponding container mounts...
+        pod["spec"]["containers"][0]["volumeMounts"].append(
+            {
+                "name": "nf-config",
+                "mountPath": f"{working_path}/nextflow.config",
+                "subPath": "nextflow.config",
+            }
+        )
 
     # Files?
     # If so add appropriate volumes and mounts
