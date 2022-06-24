@@ -40,7 +40,6 @@ default_project_mount: str = "/project"
 default_project_claim_name: str = "project"
 default_user_id: int = 1001
 default_group_id: int = 1001
-default_fs_group: int = 1001
 
 
 # The Nextflow kubernetes config file.
@@ -59,7 +58,7 @@ executor {
 k8s {
   computeResourceType = 'Job'
   serviceAccount = '%(sa)s'
-  runAsUser = %(sc_run_as_user)s
+  securityContext: [runAsUser: %(user)s, runAsGroup: %(group)s, fsGroup: 0]
   storageClaimName = '%(claim_name)s'
   storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
@@ -225,7 +224,8 @@ def create(name, namespace, spec, **_):
             "project_id": project_id,
             "project_mount": project_mount,
             "sa": SA,
-            "sc_run_as_user": sc_run_as_user,
+            "user": sc_run_as_user,
+            "group": sc_run_as_group,
             "selector_key": _POD_NODE_SELECTOR_KEY,
             "selector_value": _POD_NODE_SELECTOR_VALUE,
         }
