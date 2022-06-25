@@ -116,6 +116,9 @@ def create(name, namespace, spec, **_):
     material: Dict[str, any] = spec.get("imDataManager", {})
     logging.info("material=%s (name=%s)", material, name)
 
+    extras: Dict[str, any] = spec.get("imDataManagerExtras", {})
+    logging.info("extras=%s (name=%s)", extras, name)
+
     image: str = material.get("image")
     if not image:
         msg = "image is not defined"
@@ -233,7 +236,7 @@ def create(name, namespace, spec, **_):
         configmap_dmk = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
-            "metadata": {"name": f"nf-config-{name}", "labels": {"app": name}},
+            "metadata": {"name": f"{name}-nf-config", "labels": {"app": name}},
             "data": {"nextflow.config": nextflow_config % configmap_vars},
         }
 
@@ -258,7 +261,7 @@ def create(name, namespace, spec, **_):
 
         file_number += 1
         file_name: str = os.path.basename(image_file["name"])
-        cm_name: str = f"file-{file_number}-{name}"
+        cm_name: str = f"{name}-file-{file_number}"
         configmap_file = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
@@ -372,8 +375,9 @@ def create(name, namespace, spec, **_):
     if image_type.lower() == "nextflow":
         # Extend the 'volumes' list...
         pod["spec"]["volumes"].append(
-            {"name": "nf-config", "configMap": {"name": f"nf-config-{name}"}}
-        )  # ...and the corresponding container mounts...
+            {"name": "nf-config", "configMap": {"name": f"{name}-nf-config"}}
+        )
+        # ...and the corresponding container mounts...
         pod["spec"]["containers"][0]["volumeMounts"].append(
             {
                 "name": "nf-config",
@@ -389,11 +393,12 @@ def create(name, namespace, spec, **_):
     for image_file in image_files:
         file_number += 1
         file_name: str = os.path.basename(image_file["name"])
-        cm_name: str = f"file-{file_number}-{name}"
+        cm_name: str = f"{name}-file-{file_number}"
         # Extend the 'volumes' list...
         pod["spec"]["volumes"].append(
             {"name": f"file-{file_number}", "configMap": {"name": cm_name}}
-        )  # ...and the corresponding container mounts...
+        )
+        # ...and the corresponding container mounts...
         pod["spec"]["containers"][0]["volumeMounts"].append(
             {
                 "name": f"file-{file_number}",
