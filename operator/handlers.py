@@ -203,6 +203,7 @@ def create(name, namespace, spec, **_):
 
     logging.info("Creating ConfigMap %s...", name)
 
+    core_api = kubernetes.client.CoreV1Api()
     if image_type.lower() == "nextflow":
 
         # Do we need to provide extra Pod declaration settings?
@@ -237,7 +238,6 @@ def create(name, namespace, spec, **_):
         }
 
         kopf.adopt(configmap_dmk)
-        core_api = kubernetes.client.CoreV1Api()
         try:
             core_api.create_namespaced_config_map(namespace, configmap_dmk)
         except kubernetes.client.exceptions.ApiException as ex:
