@@ -86,6 +86,7 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_NODE_SELECTOR_KEY=%s", _POD_NODE_SELECTOR_KEY)
     logging.info("Startup _POD_NODE_SELECTOR_VALUE=%s", _POD_NODE_SELECTOR_VALUE)
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
+    logging.info("Startup _POD_SA=%s", _POD_SA)
 
 
 @kopf.on.create("squonk.it", "v3", "datamanagerjobs")
@@ -423,7 +424,7 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "",
+    "squonk.it",
     "v3",
     "pods",
     labels={"data-manager.informaticsmatters.com/instance-is-job": "yes"},
