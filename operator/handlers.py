@@ -77,8 +77,9 @@ def configure(settings: kopf.OperatorSettings, **_):
     # Attempt to protect ourselves from missing watch events.
     # See https://github.com/nolar/kopf/issues/698
     # Added in an attempt to prevent the operator "falling silent"
-    settings.watching.server_timeout = 120
-    settings.watching.client_timeout = 150
+    settings.watching.client_timeout = 3 * 60
+    settings.watching.connect_timeout = 1 * 60
+    settings.watching.server_timeout = 10 * 60
 
     logging.info("Startup _NF_EXECUTOR_QUEUE_SIZE=%s", _NF_EXECUTOR_QUEUE_SIZE)
     logging.info("Startup _POD_DEFAULT_CPU=%s", _POD_DEFAULT_CPU)
