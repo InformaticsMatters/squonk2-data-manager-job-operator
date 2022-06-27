@@ -426,7 +426,6 @@ def create(name, namespace, spec, **_):
 @kopf.on.event(
     "squonk.it",
     "v3",
-    "pods",
     labels={"data-manager.informaticsmatters.com/instance-is-job": "yes"},
 )
 def job_event(event, **_):
