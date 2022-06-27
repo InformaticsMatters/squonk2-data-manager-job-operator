@@ -30,8 +30,9 @@ _NF_EXECUTOR_QUEUE_SIZE: int = int(os.environ.get("JO_NF_EXECUTOR_QUEUE_SIZE", "
 _POD_DEFAULT_CPU: str = os.environ.get("JO_POD_DEFAULT_CPU", "1")
 _POD_DEFAULT_MEMORY: str = os.environ.get("JO_POD_DEFAULT_MEMORY", "1Gi")
 
-# The application SA
-SA = "data-manager-app"
+# The Service Account to attach the Pods to.
+# By default it's the DM's built-in app-based service account
+_POD_SA: str = os.environ.get("JO_POD_SA", "data-manager-app")
 
 # Some (key) default variables...
 default_cpu: str = _POD_DEFAULT_CPU
@@ -227,7 +228,7 @@ def create(name, namespace, spec, **_):
             "name": name,
             "project_id": project_id,
             "project_mount": project_mount,
-            "sa": SA,
+            "sa": _POD_SA,
             "user": sc_run_as_user,
             "group": sc_run_as_group,
             "selector_key": _POD_NODE_SELECTOR_KEY,
@@ -299,7 +300,7 @@ def create(name, namespace, spec, **_):
         "apiVersion": "v1",
         "metadata": {"name": name, "labels": {}},
         "spec": {
-            "serviceAccountName": SA,
+            "serviceAccountName": _POD_SA,
             "nodeSelector": {_POD_NODE_SELECTOR_KEY: _POD_NODE_SELECTOR_VALUE},
             "restartPolicy": "Never",
             "containers": [
@@ -422,11 +423,14 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "", "v3", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
+    "",
+    "v3",
+    "pods",
+    labels={"data-manager.informaticsmatters.com/instance-is-job": "yes"},
 )
 def job_event(event, **_):
     """An event handler for Pods that we created -
-    i.e. those whose 'purpose' is 'JOB'.
+    i.e. those whose 'instance-is-job' is 'yes'.
 
     It's here we're able to detect that the Pod's run is complete.
     When it is, we delete the Pod and the Pod's Job
@@ -483,7 +487,9 @@ def job_event(event, **_):
                 )
 
             # Delete the ConfigMap
-            cm_name = f"nf-config-{pod_name}"
+            # This will fail for non-nextflow Pods
+            # We need a better way to identify the resources we created
+            cm_name = f"{pod_name}-nf-config"
             logging.info('Deleting ConfigMap "%s"...', cm_name)
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
