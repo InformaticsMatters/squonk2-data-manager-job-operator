@@ -90,7 +90,7 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_SA=%s", _POD_SA)
 
 
-@kopf.on.create("squonk.it", "v3", "datamanagerjobs")
+@kopf.on.create("datamanagerjobs")
 def create(name, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
@@ -425,8 +425,7 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "squonk.it",
-    "v3",
+    "datamanagerjobs",
     labels={"data-manager.informaticsmatters.com/instance-is-job": "yes"},
 )
 def job_event(event, **_):
