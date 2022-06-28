@@ -1,7 +1,6 @@
 ---
 
-jo_image_tag: 19.3.0-rc.5
-jo_dmapi_namespace: data-manager-api-production
+jo_image_tag: 19.3.0
 
 jo_pod_node_selector_key: informaticsmatters.com/purpose-worker
 jo_pod_node_selector_value: "yes"

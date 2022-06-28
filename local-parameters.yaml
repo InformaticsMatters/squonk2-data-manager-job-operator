@@ -1,7 +1,6 @@
 ---
 
-jo_image_tag: 19.2.0
-jo_dmapi_namespace: data-manager-api
+jo_image_tag: 19.3.0
 
 # The Kubernetes config file
 jo_kubeconfig: ~/k8s-config/config-local

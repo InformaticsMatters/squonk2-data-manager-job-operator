@@ -7,7 +7,6 @@
 jo_image_tag: "{{ lookup('env', 'IM_DEV_JOB_O_TAG') | default('19.2.0', True) }}"
 
 jo_namespace: data-manager-job-operator
-jo_dmapi_namespace: data-manager-api
 
 # The KUBECONFIG reference.
 # Used outside of AWX to set kubernetes credentials.
