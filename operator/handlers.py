@@ -30,8 +30,9 @@ _NF_EXECUTOR_QUEUE_SIZE: int = int(os.environ.get("JO_NF_EXECUTOR_QUEUE_SIZE", "
 _POD_DEFAULT_CPU: str = os.environ.get("JO_POD_DEFAULT_CPU", "1")
 _POD_DEFAULT_MEMORY: str = os.environ.get("JO_POD_DEFAULT_MEMORY", "1Gi")
 
-# The application SA
-SA = "data-manager-app"
+# The Service Account to attach the Pods to.
+# By default it's the DM's built-in app-based service account
+_POD_SA: str = os.environ.get("JO_POD_SA", "data-manager-app")
 
 # Some (key) default variables...
 default_cpu: str = _POD_DEFAULT_CPU
@@ -40,7 +41,6 @@ default_project_mount: str = "/project"
 default_project_claim_name: str = "project"
 default_user_id: int = 1001
 default_group_id: int = 1001
-default_fs_group: int = 1001
 
 
 # The Nextflow kubernetes config file.
@@ -59,7 +59,7 @@ executor {
 k8s {
   computeResourceType = 'Job'
   serviceAccount = '%(sa)s'
-  runAsUser = %(sc_run_as_user)s
+  securityContext: [runAsUser: %(user)s, runAsGroup: %(group)s, fsGroup: 0]
   storageClaimName = '%(claim_name)s'
   storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
@@ -77,8 +77,9 @@ def configure(settings: kopf.OperatorSettings, **_):
     # Attempt to protect ourselves from missing watch events.
     # See https://github.com/nolar/kopf/issues/698
     # Added in an attempt to prevent the operator "falling silent"
-    settings.watching.server_timeout = 120
-    settings.watching.client_timeout = 150
+    settings.watching.client_timeout = 3 * 60
+    settings.watching.connect_timeout = 1 * 60
+    settings.watching.server_timeout = 10 * 60
 
     logging.info("Startup _NF_EXECUTOR_QUEUE_SIZE=%s", _NF_EXECUTOR_QUEUE_SIZE)
     logging.info("Startup _POD_DEFAULT_CPU=%s", _POD_DEFAULT_CPU)
@@ -86,9 +87,10 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_NODE_SELECTOR_KEY=%s", _POD_NODE_SELECTOR_KEY)
     logging.info("Startup _POD_NODE_SELECTOR_VALUE=%s", _POD_NODE_SELECTOR_VALUE)
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
+    logging.info("Startup _POD_SA=%s", _POD_SA)
 
 
-@kopf.on.create("squonk.it", "v2", "datamanagerjobs")
+@kopf.on.create("datamanagerjobs")
 def create(name, namespace, spec, **_):
     """Handler for CRD create events.
     Here we construct the required Kubernetes objects,
@@ -117,9 +119,17 @@ def create(name, namespace, spec, **_):
     material: Dict[str, any] = spec.get("imDataManager", {})
     logging.info("material=%s (name=%s)", material, name)
 
+    extras: Dict[str, any] = spec.get("imDataManagerExtras", {})
+    logging.info("extras=%s (name=%s)", extras, name)
+
     image: str = material.get("image")
     if not image:
         msg = "image is not defined"
+        logging.error(msg)
+        raise kopf.PermanentError(msg)
+    image_type: str = material.get("imageType")
+    if not image_type:
+        msg = "imageType is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
     command: str = material.get("command")
@@ -199,46 +209,82 @@ def create(name, namespace, spec, **_):
 
     logging.info("Creating ConfigMap %s...", name)
 
-    # Do we need to provide extra Pod declaration settings?
-    # For example, is there an image-pull-secret - if so
-    # we add it to the nextflow.config to ensure all nextflow processes
-    # have access to it.
-    extra_pod_settings = ""
-    if pull_secret:
-        # If the main image has a pull-secret, put it in the config
-        # so the other process pods in the nextflow workflow can use it.
-        extra_pod_settings += f"[imagePullSecret: '{pull_secret}'],\n"
-    # A Nextflow Kubernetes configuration file
-    # Written to the Job container as ${HOME}/nextflow.config
-    configmap_vars = {
-        "executor_queue_size": _NF_EXECUTOR_QUEUE_SIZE,
-        "extra_pod_settings": extra_pod_settings,
-        "claim_name": project_claim_name,
-        "name": name,
-        "project_id": project_id,
-        "project_mount": project_mount,
-        "sa": SA,
-        "sc_run_as_user": sc_run_as_user,
-        "selector_key": _POD_NODE_SELECTOR_KEY,
-        "selector_value": _POD_NODE_SELECTOR_VALUE,
-    }
-    configmap_dmk = {
-        "apiVersion": "v1",
-        "kind": "ConfigMap",
-        "metadata": {"name": f"nf-config-{name}", "labels": {"app": name}},
-        "data": {"nextflow.config": nextflow_config % configmap_vars},
-    }
-
-    kopf.adopt(configmap_dmk)
     core_api = kubernetes.client.CoreV1Api()
-    try:
-        core_api.create_namespaced_config_map(namespace, configmap_dmk)
-    except kubernetes.client.exceptions.ApiException as ex:
-        # Whatever has happened treat it as a 'PermanentError',
-        # thus preventing the operator from constantly re-trying.
-        raise kopf.PermanentError(f"ApiException ({ex.status})")
+    if image_type.lower() == "nextflow":
 
-    logging.info("Created ConfigMap %s", name)
+        # Do we need to provide extra Pod declaration settings?
+        # For example, is there an image-pull-secret - if so
+        # we add it to the nextflow.config to ensure all nextflow processes
+        # have access to it.
+        extra_pod_settings = ""
+        if pull_secret:
+            # If the main image has a pull-secret, put it in the config
+            # so the other process pods in the nextflow workflow can use it.
+            extra_pod_settings += f"[imagePullSecret: '{pull_secret}'],\n"
+        # A Nextflow Kubernetes configuration file
+        # Written to the Job container as ${HOME}/nextflow.config
+        configmap_vars = {
+            "executor_queue_size": _NF_EXECUTOR_QUEUE_SIZE,
+            "extra_pod_settings": extra_pod_settings,
+            "claim_name": project_claim_name,
+            "name": name,
+            "project_id": project_id,
+            "project_mount": project_mount,
+            "sa": _POD_SA,
+            "user": sc_run_as_user,
+            "group": sc_run_as_group,
+            "selector_key": _POD_NODE_SELECTOR_KEY,
+            "selector_value": _POD_NODE_SELECTOR_VALUE,
+        }
+        configmap_dmk = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {"name": f"{name}-nf-config", "labels": {"app": name}},
+            "data": {"nextflow.config": nextflow_config % configmap_vars},
+        }
+
+        kopf.adopt(configmap_dmk)
+        try:
+            core_api.create_namespaced_config_map(namespace, configmap_dmk)
+        except kubernetes.client.exceptions.ApiException as ex:
+            # Whatever has happened treat it as a 'PermanentError',
+            # thus preventing the operator from constantly re-trying.
+            raise kopf.PermanentError(f"ApiException ({ex.status})")
+
+        logging.info("Created ConfigMap %s", name)
+
+    # Any files to inject into the image?
+    # If so they have a 'name', 'content' and 'origin'.
+    # The name is expected to be a qualified path like '/usr/local/blob.txt'.
+    # We create a ConfigMap for each.
+
+    image_files: List[Dict[str, str]] = material.get("file", [])
+    file_number: int = 0
+    for image_file in image_files:
+
+        file_number += 1
+        file_name: str = os.path.basename(image_file["name"])
+        cm_name: str = f"{name}-file-{file_number}"
+        configmap_file = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {
+                "name": cm_name,
+                "labels": {"app": name},
+                "annotations": {"origin": image_file["origin"]},
+            },
+            "data": {file_name: image_file["content"]},
+        }
+
+        kopf.adopt(configmap_file)
+        try:
+            core_api.create_namespaced_config_map(namespace, configmap_file)
+        except kubernetes.client.exceptions.ApiException as ex:
+            # Whatever has happened treat it as a 'PermanentError',
+            # thus preventing the operator from constantly re-trying.
+            raise kopf.PermanentError(f"ApiException ({ex.status})")
+
+        logging.info("Created ConfigMap %s", cm_name)
 
     # Pod
     # ---
@@ -256,7 +302,7 @@ def create(name, namespace, spec, **_):
         "apiVersion": "v1",
         "metadata": {"name": name, "labels": {}},
         "spec": {
-            "serviceAccountName": SA,
+            "serviceAccountName": _POD_SA,
             "nodeSelector": {_POD_NODE_SELECTOR_KEY: _POD_NODE_SELECTOR_VALUE},
             "restartPolicy": "Never",
             "containers": [
@@ -283,11 +329,6 @@ def create(name, namespace, spec, **_):
                             "mountPath": project_mount,
                             "subPath": project_id,
                         },
-                        {
-                            "name": "nf-config",
-                            "mountPath": f"{working_path}/nextflow.config",
-                            "subPath": "nextflow.config",
-                        },
                     ],
                 }
             ],
@@ -301,7 +342,6 @@ def create(name, namespace, spec, **_):
                     "name": "project",
                     "persistentVolumeClaim": {"claimName": project_claim_name},
                 },
-                {"name": "nf-config", "configMap": {"name": f"nf-config-{name}"}},
             ],
         },
     }
@@ -333,10 +373,46 @@ def create(name, namespace, spec, **_):
         )
         pod["metadata"]["labels"]["debug"] = "yes"
 
-    # Definition's complete - adopt it.
-    kopf.adopt(pod)
+    # If it's a nextflow image type
+    # add the nextflow config to the Pod.
+    if image_type.lower() == "nextflow":
+        # Extend the 'volumes' list...
+        pod["spec"]["volumes"].append(
+            {"name": "nf-config", "configMap": {"name": f"{name}-nf-config"}}
+        )
+        # ...and the corresponding container mounts...
+        pod["spec"]["containers"][0]["volumeMounts"].append(
+            {
+                "name": "nf-config",
+                "mountPath": f"{working_path}/nextflow.config",
+                "subPath": "nextflow.config",
+            }
+        )
 
-    # Noe create it - Pods are part of the Core V1 API
+    # Files?
+    # If so add appropriate volumes and mounts
+    # using the config map we'll have created earlier.
+    file_number: int = 0
+    for image_file in image_files:
+        file_number += 1
+        file_name: str = os.path.basename(image_file["name"])
+        cm_name: str = f"{name}-file-{file_number}"
+        # Extend the 'volumes' list...
+        pod["spec"]["volumes"].append(
+            {"name": f"file-{file_number}", "configMap": {"name": cm_name}}
+        )
+        # ...and the corresponding container mounts...
+        pod["spec"]["containers"][0]["volumeMounts"].append(
+            {
+                "name": f"file-{file_number}",
+                "mountPath": image_file["name"],
+                "subPath": file_name,
+            }
+        )
+
+    # Definition's complete - adopt it and create it.
+    # Pods are part of the Core V1 API
+    kopf.adopt(pod)
     api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
     try:
         api.create_namespaced_pod(body=pod, namespace=namespace)
@@ -349,11 +425,12 @@ def create(name, namespace, spec, **_):
 
 
 @kopf.on.event(
-    "", "v2", "pods", labels={"data-manager.informaticsmatters.com/purpose": "INSTANCE"}
+    "datamanagerjobs",
+    labels={"data-manager.informaticsmatters.com/instance-is-job": "yes"},
 )
 def job_event(event, **_):
     """An event handler for Pods that we created -
-    i.e. those whose 'purpose' is 'JOB'.
+    i.e. those whose 'instance-is-job' is 'yes'.
 
     It's here we're able to detect that the Pod's run is complete.
     When it is, we delete the Pod and the Pod's Job
@@ -410,7 +487,9 @@ def job_event(event, **_):
                 )
 
             # Delete the ConfigMap
-            cm_name = f"nf-config-{pod_name}"
+            # This will fail for non-nextflow Pods
+            # We need a better way to identify the resources we created
+            cm_name = f"{pod_name}-nf-config"
             logging.info('Deleting ConfigMap "%s"...', cm_name)
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:

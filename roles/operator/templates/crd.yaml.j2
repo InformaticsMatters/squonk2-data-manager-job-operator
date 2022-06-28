@@ -14,9 +14,14 @@ spec:
     singular: datamanagerjob
   scope: Namespaced
   versions:
-  - name: v2
+  - name: v3
     served: true
     storage: true
+    additionalPrinterColumns:
+    - name: Image
+      type: string
+      description: The Job Image
+      jsonPath: .spec.imDataManager.image
     schema:
       openAPIV3Schema:
         type: object
@@ -24,9 +29,10 @@ spec:
           spec:
             type: object
             properties:
-              # All DataManager-injected material
+              # All 'expected' DataManager-injected material
               # will be namespaced by the property 'imDataManager'
               imDataManager:
+                x-kubernetes-preserve-unknown-fields: true
                 type: object
                 properties:
                   debug:
@@ -39,6 +45,8 @@ spec:
                       be deleted manually to avoid filling the namespace with
                       completed Jobs and Pods.
                   image:
+                    type: string
+                  imageType:
                     type: string
                   pullSecret:
                     type: string
@@ -93,3 +101,20 @@ spec:
                     type: array
                     items:
                       type: string
+                  file:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        content:
+                          type: string
+                        origin:
+                          type: string
+              # Additional (unknown) properties.
+              # These will not be pruned by Kubernetes and are used
+              # for future feature content
+              # that may be migrated to the 'imDataManager' block.
+              imDataManagerExtras:
+                x-kubernetes-preserve-unknown-fields: true
