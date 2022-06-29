@@ -320,8 +320,11 @@ def create(name, namespace, spec, **_):
                         }
                     ],
                     "resources": {
-                        "requests": {"cpu": cpu_request, "memory": memory_request},
-                        "limits": {"cpu": cpu_limit, "memory": memory_limit},
+                        "requests": {
+                            "cpu": f"{cpu_request}",
+                            "memory": f"{memory_request}",
+                        },
+                        "limits": {"cpu": f"{cpu_limit}", "memory": f"{memory_limit}"},
                     },
                     "volumeMounts": [
                         {
