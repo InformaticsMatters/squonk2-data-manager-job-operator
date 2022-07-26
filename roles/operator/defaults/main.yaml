@@ -21,6 +21,9 @@ jo_pod_node_selector_value: 'yes'
 
 # Nextflow executor queue size?
 jo_nf_executor_queue_size: 100
+# Default Job CPU and memory settings
+jo_pod_default_cpu: '1'
+jo_pod_default_memory: '1Gi'
 
 # The pre-delete delay (seconds) for Pods.
 # After a Pod's finished it's deleted after this period has elapsed.

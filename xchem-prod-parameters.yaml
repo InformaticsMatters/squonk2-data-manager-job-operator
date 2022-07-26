@@ -1,9 +1,9 @@
 ---
 
-jo_image_tag: 19.3.0
+jo_image_tag: 19.3.1
 
 jo_pod_node_selector_key: informaticsmatters.com/purpose-worker
 jo_pod_node_selector_value: "yes"
-jo_fallback_node_selector_key: iinformaticsmatters.com/purpose-core
+jo_fallback_node_selector_key: informaticsmatters.com/purpose-core
 
 jo_kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
