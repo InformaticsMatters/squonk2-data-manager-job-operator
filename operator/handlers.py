@@ -391,6 +391,13 @@ def create(name, namespace, spec, **_):
                 "subPath": "nextflow.config",
             }
         )
+        # ...and some environment variables...
+        pod["spec"]["containers"][0]["env"].append(
+            {
+                "name": "NXF_ANSI_LOG",
+                "value": "false",
+            }
+        )
 
     # Files?
     # If so add appropriate volumes and mounts
