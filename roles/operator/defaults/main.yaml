@@ -21,6 +21,10 @@ jo_pod_node_selector_value: 'yes'
 
 # Nextflow executor queue size?
 jo_nf_executor_queue_size: 100
+# Use ANSI log?
+# Operator default is 'no'.
+jo_nf_ansi_log: no
+
 # Default Job CPU and memory settings
 jo_pod_default_cpu: '1'
 jo_pod_default_memory: '1Gi'

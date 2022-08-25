@@ -47,6 +47,10 @@ spec:
           value: '{{ jo_pod_node_selector_value }}'
         - name: JO_NF_EXECUTOR_QUEUE_SIZE
           value: '{{ jo_nf_executor_queue_size }}'
+{% if jo_nf_ansi_log %}
+        - name: JO_NF_ANSI_LOG
+          value: 'true'
+{% endif %}
         - name: JO_POD_DEFAULT_CPU
           value: '{{ jo_pod_default_cpu }}'
         - name: JO_POD_DEFAULT_MEMORY
