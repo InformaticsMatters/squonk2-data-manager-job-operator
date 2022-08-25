@@ -24,6 +24,9 @@ _POD_NODE_SELECTOR_VALUE: str = os.environ.get("JO_POD_NODE_SELECTOR_VALUE", "ye
 
 # Default queue size?
 _NF_EXECUTOR_QUEUE_SIZE: int = int(os.environ.get("JO_NF_EXECUTOR_QUEUE_SIZE", "100"))
+# Enable ANSI stdout log?
+# Unless 'true' it's 'false'
+_NF_ANSI_LOG: str = os.environ.get("JO_NF_ANSI_LOG", "false")
 
 # Default CPU and MEM using Kubernetes units
 # (applies to default requests and limits)
@@ -395,7 +398,7 @@ def create(name, namespace, spec, **_):
         pod["spec"]["containers"][0]["env"].append(
             {
                 "name": "NXF_ANSI_LOG",
-                "value": "false",
+                "value": f"{_NF_ANSI_LOG}",
             }
         )
 
