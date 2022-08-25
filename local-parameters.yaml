@@ -1,6 +1,7 @@
 ---
 
-jo_image_tag: 19.3.0
+jo_image_tag: 19.3.3
+jo_nf_ansi_log: no
 
 # The Kubernetes config file
 jo_kubeconfig: ~/k8s-config/config-local

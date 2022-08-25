@@ -1,7 +1,8 @@
 ---
 
-jo_image_tag: 19.3.0
+jo_image_tag: 19.3.3
 jo_nf_executor_queue_size: 250
+jo_nf_ansi_log: yes
 
 jo_pod_node_selector_key: informaticsmatters.com/purpose-worker
 jo_pod_node_selector_value: "yes"
