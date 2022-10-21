@@ -3,7 +3,7 @@
 import os
 import shlex
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import logging
 import kopf
@@ -27,6 +27,15 @@ _NF_EXECUTOR_QUEUE_SIZE: int = int(os.environ.get("JO_NF_EXECUTOR_QUEUE_SIZE", "
 # Enable ANSI stdout log?
 # Unless 'true' it's 'false'
 _NF_ANSI_LOG: str = os.environ.get("JO_NF_ANSI_LOG", "false")
+
+# Apply Pod Priority class?
+# Any value results in setting the Pod's Priority Class
+_APPLY_POD_PRIORITY_CLASS: Optional[str] = os.environ.get("JO_APPLY_POD_PRIORITY_CLASS")
+# If set and JO_APPLY_POD_PRIORITY_CLASS is set
+# this value will be used if now alternative is available.
+_DEFAULT_POD_PRIORITY_CLASS: str = os.environ.get(
+    "JO_DEFAULT_POD_PRIORITY_CLASS", "im-worker-medium"
+)
 
 # Default CPU and MEM using Kubernetes units
 # (applies to default requests and limits)
@@ -224,6 +233,10 @@ def create(name, namespace, spec, **_):
             # If the main image has a pull-secret, put it in the config
             # so the other process pods in the nextflow workflow can use it.
             extra_pod_settings += f"[imagePullSecret: '{pull_secret}'],\n"
+        if _APPLY_POD_PRIORITY_CLASS:
+            extra_pod_settings += (
+                f"[priorityClassName: '{_DEFAULT_POD_PRIORITY_CLASS}'],\n"
+            )
         # A Nextflow Kubernetes configuration file
         # Written to the Job container as ${HOME}/nextflow.config
         configmap_vars = {
@@ -351,6 +364,10 @@ def create(name, namespace, spec, **_):
             ],
         },
     }
+
+    # Insert a pod priority class?
+    if _APPLY_POD_PRIORITY_CLASS:
+        pod["spec"]["priorityClassName"] = _DEFAULT_POD_PRIORITY_CLASS
 
     # Pull secret?
     if pull_secret:
