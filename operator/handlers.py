@@ -100,6 +100,10 @@ def configure(settings: kopf.OperatorSettings, **_):
     logging.info("Startup _POD_NODE_SELECTOR_VALUE=%s", _POD_NODE_SELECTOR_VALUE)
     logging.info("Startup _POD_PRE_DELETE_DELAY_S=%s", _POD_PRE_DELETE_DELAY_S)
     logging.info("Startup _POD_SA=%s", _POD_SA)
+    if _APPLY_POD_PRIORITY_CLASS:
+        logging.info(
+            "Startup _DEFAULT_POD_PRIORITY_CLASS=%s", _DEFAULT_POD_PRIORITY_CLASS
+        )
 
 
 @kopf.on.create("datamanagerjobs")
