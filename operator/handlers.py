@@ -241,6 +241,14 @@ def create(name, namespace, spec, **_):
             extra_pod_settings += (
                 f"[priorityClassName: '{_DEFAULT_POD_PRIORITY_CLASS}'],\n"
             )
+        # Job environment variables?
+        # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
+        # These are added to the NF config file's process/pod declaration
+        # to they're available to the workers
+        for environment in material.get("environment", []):
+            key, value = environment.split("=")
+            extra_pod_settings += f"[env: '{key}', value: '{value}'],\n"
+
         # A Nextflow Kubernetes configuration file
         # Written to the Job container as ${HOME}/nextflow.config
         configmap_vars = {
@@ -382,12 +390,6 @@ def create(name, namespace, spec, **_):
     for label in material.get("labels", []):
         key, value = label.split("=")
         pod["metadata"]["labels"][key] = value
-
-    # Additional environment?
-    # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
-    for environment in material.get("environment", []):
-        key, value = environment.split("=")
-        pod["spec"]["containers"][0]["env"].append({"name": key, "value": value})
 
     # Instructed to debug the Job?
     # Yes if the spec's debug is set.
