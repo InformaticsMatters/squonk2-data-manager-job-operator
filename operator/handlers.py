@@ -402,6 +402,18 @@ def create(name, namespace, spec, **_):
         )
         pod["metadata"]["labels"]["debug"] = "yes"
 
+    # Job environment variables?
+    # Provided by the DM as an array of strings of the form '<KEY>=<VALUE>'
+    # These are always added to the Job Pod, regardless of image_type.
+    for environment in material.get("environment", []):
+        key, value = environment.split("=")
+        pod["spec"]["containers"][0]["env"].append(
+            {
+                "name": f"{key}",
+                "value": f"{value}",
+            }
+        )
+
     # If it's a nextflow image type
     # add the nextflow config to the Pod.
     if image_type.lower() == "nextflow":
