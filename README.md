@@ -51,15 +51,19 @@ current health of your clone with: -
     pre-commit run --all-files
 
 ## Building the operator (local development)
+Pre-requisites: -
+
+- Docker Compose (v2)
+
 The operator container, residing in the `operator` directory,
 is automatically built and pushed to Docker Hub using GitHub Actions.
 
-You can build the image yourself using docker-compose.
+You can build the image yourself using docker compose.
 The following will build and push an operator image with the tag `19.2.0-alpha.1`: -
 
     export IMAGE_TAG=19.2.0-alpha.1
-    docker-compose build
-    docker-compose push
+    docker compose build
+    docker compose push
 
 ## Versioning
 We adopt a different approach for operator naming. At the time of writing
@@ -77,7 +81,7 @@ and for bug-fixes we adjust the **patch** value. So, for a build against
 Kuberntes 1.19 our **major** version will always be `19`.
 
 ## Deploying into the Data Manager API
-We use [Ansible] 4 and community modules in [Ansible Galaxy] as the deployment
+We use [Ansible] and community modules in [Ansible Galaxy] as the deployment
 mechanism, using the `operator` Ansible role in this repository and a
 Kubernetes config (KUBECONFIG). All of this is done via a suitable Python
 environment using the requirements in the root of the project...

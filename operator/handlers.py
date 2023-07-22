@@ -227,7 +227,6 @@ def create(name, namespace, spec, **_):
 
     core_api = kubernetes.client.CoreV1Api()
     if image_type.lower() == "nextflow":
-
         # Do we need to provide extra Pod declaration settings?
         # For example, is there an image-pull-secret - if so
         # we add it to the nextflow.config to ensure all nextflow processes
@@ -289,7 +288,6 @@ def create(name, namespace, spec, **_):
     image_files: List[Dict[str, str]] = material.get("file", [])
     file_number: int = 0
     for image_file in image_files:
-
         file_number += 1
         file_name: str = os.path.basename(image_file["name"])
         cm_name: str = f"{name}-file-{file_number}"
@@ -494,7 +492,6 @@ def job_event(event, **_):
         logging.info("Handling event type=%s pod_phase=%s...", event_type, pod_phase)
 
         if pod_phase in ["Succeeded", "Failed", "Completed"]:
-
             pod_name: str = pod["metadata"]["name"]
             logging.info("...for Pod %s", pod_name)
 
@@ -513,7 +510,7 @@ def job_event(event, **_):
             logging.info('Job "%s" has finished.', pod_name)
             if _POD_PRE_DELETE_DELAY_S > 0:
                 logging.info(
-                    'Deleting "%s"' " after a delay of %s" " seconds...",
+                    'Deleting "%s" after a delay of %s seconds...',
                     pod_name,
                     _POD_PRE_DELETE_DELAY_S,
                 )

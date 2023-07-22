@@ -1,5 +1,7 @@
 ---
-- hosts: localhost
+- name: On localhost
+  hosts: localhost
   tasks:
-  - include_role:
+  - name: Include the Operator
+    ansible.builtin.include_role:
       name: operator
