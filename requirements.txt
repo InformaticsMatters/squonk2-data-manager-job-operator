@@ -1,2 +1,2 @@
-ansible == 8.2.0
-openshift == 0.13.1
+ansible == 9.0.1
+openshift == 0.13.2
