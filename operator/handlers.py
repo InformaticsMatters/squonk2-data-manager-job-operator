@@ -1,5 +1,6 @@
 """A kopf handler for the DataManagerJob CRD.
 """
+
 import os
 import shlex
 import time
