@@ -18,14 +18,26 @@
   ansible.builtin.debug:
     var: freeze.stdout_lines
 
-- name: Assert kubeconfig defined
-  ansible.builtin.assert:
-    that:
-    - jo_kubeconfig|length > 0
-    - jo_kubeconfig != 'SetMe'
-
 - name: Assert operator version defined
   ansible.builtin.assert:
     that:
     - jo_image_tag|length > 0
     - jo_image_tag != 'SetMe'
+
+# A kubernetes host and an API key must be set.
+# Either environment variables will have been set by the user
+# or AWX 'kubernetes' credentials will have injected them.
+# Either way the variables 'k8s_auth_host' and
+# 'k8s_auth_api_key' must have been set.
+- name: Assert kubernetes authentication (no kubeconfig)
+  assert:
+    that:
+    - k8s_auth_host|string|length > 0
+    - k8s_auth_api_key|string|length > 0
+  when: jo_kubeconfig == 'SetMe'
+
+- name: Assert kubeconfig defined (kubeconfig)
+  ansible.builtin.assert:
+    that:
+    - jo_kubeconfig|length > 0
+  when: jo_kubeconfig != 'SetMe'

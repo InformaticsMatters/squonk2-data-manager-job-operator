@@ -1,0 +1,8 @@
+---
+
+jo_image_tag: 31.0.0
+jo_nf_executor_queue_size: 150
+jo_apply_pod_priority_class: yes
+
+# The Kubernetes config file
+jo_kubeconfig: ~/k8s-config/nw-xch-prod.yaml
