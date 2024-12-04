@@ -28,8 +28,4 @@
     ansible.builtin.include_tasks: undeploy.yaml
     when: jo_state|string == 'absent'
 
-  module_defaults:
-    group/k8s:
-      host: "{{ k8s_auth_host }}"
-      api_key: "{{ k8s_auth_api_key }}"
   when: jo_kubeconfig == 'SetMe'
