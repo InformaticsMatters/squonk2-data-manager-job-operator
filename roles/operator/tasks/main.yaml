@@ -4,6 +4,10 @@
   ansible.builtin.include_tasks: prep.yaml
 
 - name: Deploy (with k8s kubeconfig)
+  when: jo_kubeconfig != 'SetMe'
+  module_defaults:
+    group/k8s:
+      kubeconfig: "{{ jo_kubeconfig }}"
   block:
 
   - name: Deploy (k8s kubeconfig)
@@ -13,12 +17,8 @@
     ansible.builtin.include_tasks: undeploy.yaml
     when: jo_state|string == 'absent'
 
-  module_defaults:
-    group/k8s:
-      kubeconfig: "{{ jo_kubeconfig }}"
-  when: jo_kubeconfig != 'SetMe'
-
 - name: Deploy (with k8s host and API key)
+  when: jo_kubeconfig == 'SetMe'
   block:
 
   - name: Deploy (k8s API key)
@@ -27,5 +27,3 @@
   - name: Undeploy (k8s API key)
     ansible.builtin.include_tasks: undeploy.yaml
     when: jo_state|string == 'absent'
-
-  when: jo_kubeconfig == 'SetMe'
