@@ -1,5 +1,4 @@
-"""A kopf handler for the DataManagerJob CRD.
-"""
+"""A kopf handler for the DataManagerJob CRD."""
 
 import os
 import shlex
@@ -9,6 +8,14 @@ from typing import Any, Dict, List, Optional
 import logging
 import kopf
 import kubernetes
+
+# Configuration of underlying API requests.
+#
+# Request timeout (from Python Kubernetes API)
+#   If one number provided, it will be total request
+#   timeout. It can also be a pair (tuple) of
+#   (connection, read) timeouts.
+_REQUEST_TIMEOUT = (30, 20)
 
 # Pod pre-delete delay (seconds).
 # A fixed period of time the 'job_event' method waits
@@ -273,8 +280,11 @@ def create(name, namespace, spec, **_):
 
         kopf.adopt(configmap_dmk)
         try:
-            core_api.create_namespaced_config_map(namespace, configmap_dmk)
+            core_api.create_namespaced_config_map(
+                namespace, configmap_dmk, _request_timeout=_REQUEST_TIMEOUT
+            )
         except kubernetes.client.exceptions.ApiException as ex:
+            logging.warning("Got ApiException creating DMK ConfigMap (%s)", ex)
             # Whatever has happened treat it as a 'PermanentError',
             # thus preventing the operator from constantly re-trying.
             raise kopf.PermanentError(f"ApiException ({ex.status})")
@@ -305,8 +315,11 @@ def create(name, namespace, spec, **_):
 
         kopf.adopt(configmap_file)
         try:
-            core_api.create_namespaced_config_map(namespace, configmap_file)
+            core_api.create_namespaced_config_map(
+                namespace, configmap_file, _request_timeout=_REQUEST_TIMEOUT
+            )
         except kubernetes.client.exceptions.ApiException as ex:
+            logging.warning("Got ApiException creating File ConfigMap (%s)", ex)
             # Whatever has happened treat it as a 'PermanentError',
             # thus preventing the operator from constantly re-trying.
             raise kopf.PermanentError(f"ApiException ({ex.status})")
@@ -462,8 +475,11 @@ def create(name, namespace, spec, **_):
     kopf.adopt(pod)
     api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
     try:
-        api.create_namespaced_pod(body=pod, namespace=namespace)
+        api.create_namespaced_pod(
+            body=pod, namespace=namespace, _request_timeout=_REQUEST_TIMEOUT
+        )
     except kubernetes.client.exceptions.ApiException as ex:
+        logging.warning("Got ApiException creating Pod (%s)", ex)
         # Whatever has happened treat it as a 'PermanentError',
         # thus preventing the operator from constantly re-trying.
         raise kopf.PermanentError(f"ApiException ({ex.status})")
@@ -523,7 +539,9 @@ def job_event(event, **_):
 
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
-                core_api.delete_namespaced_pod(pod_name, pod_namespace)
+                core_api.delete_namespaced_pod(
+                    pod_name, pod_namespace, _request_timeout=_REQUEST_TIMEOUT
+                )
             except kubernetes.client.exceptions.ApiException as ex:
                 logging.warning(
                     'ApiException (%s) deleting Pod "%s" (%s)',
@@ -539,7 +557,9 @@ def job_event(event, **_):
             logging.info('Deleting ConfigMap "%s"...', cm_name)
             core_api: kubernetes.client.CoreV1Api = kubernetes.client.CoreV1Api()
             try:
-                core_api.delete_namespaced_config_map(cm_name, pod_namespace)
+                core_api.delete_namespaced_config_map(
+                    cm_name, pod_namespace, _request_timeout=_REQUEST_TIMEOUT
+                )
             except kubernetes.client.exceptions.ApiException as ex:
                 logging.warning(
                     'ApiException (%s) deleting ConfigMap "%s" (%s)',
