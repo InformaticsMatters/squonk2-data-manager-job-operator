@@ -1,4 +1,4 @@
-FROM python:3.12.7-slim
+FROM python:3.12.9-slim
 
 # Labels
 LABEL maintainer='Alan Christie <achristie@informaticsmatters.com>'
@@ -14,4 +14,4 @@ WORKDIR /src
 COPY handlers.py /src/
 COPY entrypoint.sh /src/
 
-CMD ./entrypoint.sh
+CMD ["./entrypoint.sh"]
