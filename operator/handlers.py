@@ -190,7 +190,14 @@ def create(name, namespace, spec, **_):
     # The supplied command is a string.
     # For now split using Python shlex module - i.e. one that honours quotes.
     # i.e. 'echo "Hello, world"' becomes ['echo', 'Hello, world']
-    command_items = shlex.split(command)
+    #
+    # We must protect ourselves from split problems - which must be treated
+    # as a PermanentError (sc-3437).
+    try:
+        command_items = shlex.split(command)
+    except ValueError as ex:
+        logging.error("Got ValueError trying to split the command (%s)", command)
+        raise kopf.PermanentError(f"ValueError ({ex.status})")
 
     # Security options
     sc_run_as_user = material.get("securityContext", {}).get(
