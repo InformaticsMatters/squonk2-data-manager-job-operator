@@ -197,7 +197,7 @@ def create(name, namespace, spec, **_):
         command_items = shlex.split(command)
     except ValueError as ex:
         logging.error("Got ValueError trying to split the command (%s)", command)
-        raise kopf.PermanentError(f"ValueError ({ex.status})")
+        raise kopf.PermanentError(f"ValueError ({ex})")
 
     # Security options
     sc_run_as_user = material.get("securityContext", {}).get(
