@@ -302,12 +302,27 @@ def create(name, namespace, spec, **_):
     # If so they have a 'name', 'content' and 'origin'.
     # The name is expected to be a qualified path like '/usr/local/blob.txt'.
     # We create a ConfigMap for each.
-
     image_files: List[Dict[str, str]] = material.get("file", [])
     file_number: int = 0
     for image_file in image_files:
-        file_number += 1
+        if "name" not in image_file:
+            msg = "Got a file from the imDataManager element but name was not provided"
+            logging.error(msg)
+            raise kopf.PermanentError(msg)
+        elif "content" not in image_file:
+            msg = (
+                "Got a file from the imDataManager element but content was not provided"
+            )
+            logging.error(msg)
+            raise kopf.PermanentError(msg)
+        elif "origin" not in image_file:
+            msg = (
+                "Got a file from the imDataManager element but origin was not provided"
+            )
+            logging.error(msg)
+            raise kopf.PermanentError(msg)
         file_name: str = os.path.basename(image_file["name"])
+        file_number += 1
         cm_name: str = f"{name}-file-{file_number}"
         configmap_file = {
             "apiVersion": "v1",
