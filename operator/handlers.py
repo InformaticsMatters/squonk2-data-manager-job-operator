@@ -83,7 +83,7 @@ k8s {
   storageClaimName = '%(claim_name)s'
   storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
-  workDir = '%(project_mount)s/.%(name)s/work'
+  workDir = '%(nxf_work)'
 }
 """
 
@@ -143,8 +143,9 @@ def create(name, namespace, spec, **_):
     material: Dict[str, any] = spec.get("imDataManager", {})
     logging.info("material=%s (name=%s)", material, name)
 
-    # 'imDataManagerExtras' is an undefined map of extra material,
-    # typically used to provide information used to change the behaviour of the operator.
+    # 'imDataManagerExtras' is an undefined map of extra material
+    # that is used to provide information used to change the behaviour of the operator.
+    # Typically used as operator behaviour changes.
     #
     # One example is the move form using the Project directory to the Instance
     # directory as the 'current working directory'.
@@ -157,37 +158,38 @@ def create(name, namespace, spec, **_):
         True if "useInstanceDirectoryForProject" in extras else False
     )
     logging.info(
-        "Extras useInstanceDirectoryForProject=%s", use_instance_directory_for_project
+        "Extras use_instance_directory_for_project=%s",
+        use_instance_directory_for_project,
     )
 
     image: str = material.get("image")
     if not image:
-        msg = "image is not defined"
+        msg = "Material image is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
     image_type: str = material.get("imageType")
     if not image_type:
-        msg = "imageType is not defined"
+        msg = "Material imageType is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
     command: str = material.get("command")
     if not command:
-        msg = "command is not defined"
+        msg = "Material command is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
     task_id: str = material.get("taskId")
     if not task_id:
-        msg = "task_id is not defined"
+        msg = "Material taskId is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
     project_id = material.get("project", {}).get("id")
     if not project_id:
-        msg = "project_id is not defined"
+        msg = "Material project->id is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
     working_directory = material.get("workingDirectory")
     if not working_directory:
-        msg = "working_directory is not defined"
+        msg = "Material workingDirectory is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
 
@@ -250,6 +252,21 @@ def create(name, namespace, spec, **_):
     # Image pull secret?
     pull_secret: str = material.get("pullSecret", "")
 
+    # Do we use the Project directory or Instance directory
+    # as the projectMount sub-path?
+    # Same question for the location of the Nextflow working directory
+    # (which is either aware of the instance directory or not)
+    project_mount_sub_path: str = (
+        f"{project_id}/.{name}" if use_instance_directory_for_project else project_id
+    )
+    nxf_work: str = (
+        f"{project_mount}/work"
+        if use_instance_directory_for_project
+        else f"{project_mount}/.{name}/work"
+    )
+    logging.info("project_mount_sub_path=%s", project_mount_sub_path)
+    logging.info("nxf_work=%s", nxf_work)
+
     # ConfigMaps
     # ----------
 
@@ -285,6 +302,7 @@ def create(name, namespace, spec, **_):
             "extra_pod_settings": extra_pod_settings,
             "claim_name": project_claim_name,
             "name": name,
+            "nxf_work": nxf_work,
             "project_id": project_id,
             "project_mount": project_mount,
             "sa": _POD_SA,
@@ -373,21 +391,6 @@ def create(name, namespace, spec, **_):
     working_path = working_directory
     if working_sub_path:
         working_path += f"/{working_sub_path}"
-
-    # Do we use the Project directory or Instance directory
-    # as the projectMount sub-path?
-    # Same question for the location of the Nextflow working directory
-    # (which is either aware of the instance directory or not)
-    project_mount_sub_path: str = (
-        f"{project_id}/.{name}" if use_instance_directory_for_project else project_id
-    )
-    nxf_work: str = (
-        f"{project_mount}/work"
-        if use_instance_directory_for_project
-        else f"{project_mount}/.{name}/work"
-    )
-    logging.info("Pod project_mount_sub_path=%s", project_mount_sub_path)
-    logging.info("Pod nxf_work=%s", nxf_work)
 
     pod: Dict[str, Any] = {
         "kind": "Pod",
