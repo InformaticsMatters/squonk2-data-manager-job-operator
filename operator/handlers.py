@@ -143,8 +143,22 @@ def create(name, namespace, spec, **_):
     material: Dict[str, any] = spec.get("imDataManager", {})
     logging.info("material=%s (name=%s)", material, name)
 
+    # 'imDataManagerExtras' is an undefined map of extra material,
+    # typically used to provide information used to change the behaviour of the operator.
+    #
+    # One example is the move form using the Project directory to the Instance
+    # directory as the 'current working directory'.
+    # In this case if the key 'useInstanceDirectoryForProject' is set
+    # the instance is to use the Instance directory as a mount point for the Project.
+    # Prior to this the Project directory was used for the mount point.
     extras: Dict[str, any] = spec.get("imDataManagerExtras", {})
     logging.info("extras=%s (name=%s)", extras, name)
+    use_instance_directory_for_project: bool = (
+        True if "useInstanceDirectoryForProject" in extras else False
+    )
+    logging.info(
+        "Extras useInstanceDirectoryForProject=%s", use_instance_directory_for_project
+    )
 
     image: str = material.get("image")
     if not image:
@@ -221,7 +235,8 @@ def create(name, namespace, spec, **_):
         material.get("resources", {}).get("limits", {}).get("memory", default_memory)
     )
 
-    # The project mount
+    # The instance container projectMount
+    # (the location in the instance where data is expected to be made available)
     project_mount = material.get("projectMount", default_project_mount)
     # The container working directory sub-path.
     # The sub-path is optional (and only used) if there's a working directory.
@@ -359,6 +374,21 @@ def create(name, namespace, spec, **_):
     if working_sub_path:
         working_path += f"/{working_sub_path}"
 
+    # Do we use the Project directory or Instance directory
+    # as the projectMount sub-path?
+    # Same question for the location of the Nextflow working directory
+    # (which is either aware of the instance directory or not)
+    project_mount_sub_path: str = (
+        f"{project_id}/.{name}" if use_instance_directory_for_project else project_id
+    )
+    nxf_work: str = (
+        f"{project_mount}/work"
+        if use_instance_directory_for_project
+        else f"{project_mount}/.{name}/work"
+    )
+    logging.info("Pod project_mount_sub_path=%s", project_mount_sub_path)
+    logging.info("Pod nxf_work=%s", nxf_work)
+
     pod: Dict[str, Any] = {
         "kind": "Pod",
         "apiVersion": "v1",
@@ -378,7 +408,7 @@ def create(name, namespace, spec, **_):
                     "env": [
                         {
                             "name": "NXF_WORK",
-                            "value": project_mount + "/." + name + "/work",
+                            "value": nxf_work,
                         }
                     ],
                     "resources": {
@@ -392,7 +422,7 @@ def create(name, namespace, spec, **_):
                         {
                             "name": "project",
                             "mountPath": project_mount,
-                            "subPath": project_id,
+                            "subPath": project_mount_sub_path,
                         },
                     ],
                 }
