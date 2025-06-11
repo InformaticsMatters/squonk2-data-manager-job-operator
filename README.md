@@ -27,7 +27,7 @@ Prerequisites: -
 -   Python
 -   Docker
 -   A kubernetes config file
--   A compatible Kubernetes (e.g. 1.22 thru 1.24 if the operator is built for 1.23)
+-   A compatible Kubernetes (e.g. 1.30 thru 1.32 if the operator is built for 1.31)
 
 ## Contributing
 The project uses: -
@@ -62,7 +62,7 @@ is automatically built and pushed to Docker Hub using GitHub Actions.
 You can build the image yourself using docker compose.
 The following will build and push an operator image with a specific tag: -
 
-    export IMAGE_TAG=23.0.0-alpha.1
+    export IMAGE_TAG=31.0.0-alpha.1
     docker compose build
     docker compose push
 
@@ -72,14 +72,14 @@ we were on version 19 and major changes do not result in changes to this
 number. **Why?**
 
 The major revision is actually used to identify the Kubernetes 1.x release the
-operator is built against. So the `19.x.x` operator is built using
-the Python 19.x Kubernetes package.
+operator is built against. So the `31.x.x` operator is built using
+the Python 31.x Kubernetes package.
 
 >   See the `kubernetes` package version in `operator/requrements.txt`.
 
 When we make major/significant changes we update the **minor** value
 and for bug-fixes we adjust the **patch** value. So, for a build against
-Kuberntes 1.19 our **major** version will always be `19`.
+Kubernetes 1.31 our **major** version will always be `31`.
 
 ## Deploying into the Data Manager API
 We use [Ansible] and community modules in [Ansible Galaxy] as the deployment
