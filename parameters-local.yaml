@@ -8,7 +8,7 @@
 
 jo_kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
 
-jo_namespace: im-job-operator
+jo_namespace: im-data-manager-job-operator
 jo_image_tag: "{{ lookup('env', 'IM_DEV_JOBO_IMAGE_TAG') | default('31.1.0', True) }}"
 jo_pod_default_cpu: 100m
 jo_pod_default_memory: 64Mi
