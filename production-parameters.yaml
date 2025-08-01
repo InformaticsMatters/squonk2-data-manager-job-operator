@@ -1,6 +1,6 @@
 ---
 
-jo_image_tag: 19.3.3
+jo_image_tag: 33.0.0
 jo_nf_ansi_log: yes
 
 # The Kubernetes config file

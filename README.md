@@ -6,9 +6,7 @@
 ![Architecture](https://img.shields.io/badge/architecture-amd64%20%7C%20arm64-lightgrey)
 
 [![build](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build.yaml/badge.svg)](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build.yaml)
-[![build latest](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build-latest.yaml/badge.svg)](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build-latest.yaml)
 [![build tag](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build-tag.yaml/badge.svg)](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build-tag.yaml)
-[![build stable](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build-stable.yaml/badge.svg)](https://github.com/informaticsmatters/squonk2-data-manager-job-operator/actions/workflows/build-stable.yaml)
 
 ![GitHub](https://img.shields.io/github/license/informaticsmatters/squonk2-data-manager-job-operator)
 
@@ -27,7 +25,7 @@ Prerequisites: -
 -   Python
 -   Docker
 -   A kubernetes config file
--   A compatible Kubernetes (e.g. 1.30 thru 1.32 if the operator is built for 1.31)
+-   A compatible Kubernetes (e.g. 1.32 thru 1.34 if the operator is built for 1.33)
 
 ## Contributing
 The project uses: -
@@ -62,45 +60,42 @@ is automatically built and pushed to Docker Hub using GitHub Actions.
 You can build the image yourself using docker compose.
 The following will build and push an operator image with a specific tag: -
 
-    export IMAGE_TAG=31.0.0-alpha.1
+    export IMAGE_TAG=34.0.0-alpha.1
     docker compose build
     docker compose push
 
 ## Versioning
 We adopt a different approach for operator naming. At the time of writing
-we were on version 19 and major changes do not result in changes to this
+we were on version 33 and major changes do not result in changes to this
 number. **Why?**
 
 The major revision is actually used to identify the Kubernetes 1.x release the
-operator is built against. So the `31.x.x` operator is built using
-the Python 31.x Kubernetes package.
+operator is built against. So the `33.x.x` operator is built using
+the Python 33.x Kubernetes package.
 
 >   See the `kubernetes` package version in `operator/requrements.txt`.
 
-When we make major/significant changes we update the **minor** value
+When we make feature changes we update the **minor** value
 and for bug-fixes we adjust the **patch** value. So, for a build against
-Kubernetes 1.31 our **major** version will always be `31`.
+Kubernetes 1.33 our **major** version will always be `33`.
 
 ## Deploying into the Data Manager API
-We use [Ansible] and community modules in [Ansible Galaxy] as the deployment
-mechanism, using the `operator` Ansible role in this repository and a
-Kubernetes config (KUBECONFIG). All of this is done via a suitable Python
+We use [Ansible] and is done via a suitable Python
 environment using the requirements in the root of the project...
 
     python -m venv venv
     source venv/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
-    ansible-galaxy install -r requirements.yaml
 
-Set your KUBECONFIG for the cluster and verify its right: -
+Set your KUBECONFIG for the cluster and verify it's as expected by listing the nodes: -
 
     export KUBECONFIG=~/k8s-config/config-local
     kubectl get no
     [...]
 
 Now, create a parameter file (i.e. `parameters.yaml`) based on the project's
-`example-parameters.yaml`, setting values for the operator that match your
+`parameters-template.yaml`, setting values for the operator that match your
 needs. Then deploy, using Ansible, from the root of the project: -
 
     PARAMS=parameters
@@ -114,12 +109,6 @@ To remove the operator (assuming there are no operator-derived instances)...
     has been installed it is not removed. So, removing the operator here
     is described simply to illustrate a 'clean-up' - you would not
     normally remove an Application operator in a production environment.
-
-The integration, staging and production sites have parameter files.
-
-    export KUBECONFIG=~/k8s-config/config-aws-im-main-eks
-    export PARAMS=staging
-    ansible-playbook site.yaml -e @${PARAMS}-parameters.yaml
 
 ---
 
