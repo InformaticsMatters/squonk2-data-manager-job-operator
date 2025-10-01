@@ -6,6 +6,7 @@ yaml-files:
 - '.yamllint'
 
 ignore: |
+  .cz.yaml
   .github/
   roles/operator/templates/deployment.yaml.j2
 
