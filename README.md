@@ -80,35 +80,8 @@ and for bug-fixes we adjust the **patch** value. So, for a build against
 Kubernetes 1.33 our **major** version will always be `33`.
 
 ## Deploying into the Data Manager API
-We use [Ansible] and is done via a suitable Python
-environment using the requirements in the root of the project...
-
-    python -m venv venv
-    source venv/bin/activate
-    pip install --upgrade pip
-    pip install -r requirements.txt
-
-Set your KUBECONFIG for the cluster and verify it's as expected by listing the nodes: -
-
-    export KUBECONFIG=~/k8s-config/config-local
-    kubectl get no
-    [...]
-
-Now, create a parameter file (i.e. `parameters.yaml`) based on the project's
-`parameters-template.yaml`, setting values for the operator that match your
-needs. Then deploy, using Ansible, from the root of the project: -
-
-    PARAMS=parameters
-    ansible-playbook -e @${PARAMS}.yaml site.yaml
-
-To remove the operator (assuming there are no operator-derived instances)...
-
-    ansible-playbook -e @${PARAMS}.yaml -e jo_state=absent site.yaml
-
->   The current Data Manager API assumes that once an Application (operator)
-    has been installed it is not removed. So, removing the operator here
-    is described simply to illustrate a 'clean-up' - you would not
-    normally remove an Application operator in a production environment.
+We use our peer repository [squonk2-data-manager-job-operator-ansible]
+to deploy this operator.
 
 ---
 
@@ -121,3 +94,4 @@ To remove the operator (assuming there are no operator-derived instances)...
 [kubernetes]: https://pypi.org/project/kubernetes/
 [operator]: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
 [pre-commit]: https://pre-commit.com
+[squonk2-data-manager-job-operator-ansible]: https://github.com/informaticsmatters/squonk2-data-manager-job-operator-ansible

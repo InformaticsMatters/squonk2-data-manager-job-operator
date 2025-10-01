@@ -1,7 +1,0 @@
----
-
-jo_image_tag: 33.0.0
-jo_nf_ansi_log: yes
-
-# The Kubernetes config file
-jo_kubeconfig: ~/k8s-config/config-aws-im-main-eks

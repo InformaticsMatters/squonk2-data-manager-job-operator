@@ -1,7 +1,0 @@
----
-- name: On localhost
-  hosts: localhost
-  tasks:
-  - name: Include the Operator
-    ansible.builtin.include_role:
-      name: operator

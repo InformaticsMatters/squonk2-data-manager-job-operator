@@ -1,8 +1,0 @@
----
-
-jo_image_tag: 33.0.0
-jo_nf_ansi_log: no
-jo_namespace: im-data-manager-job-operator
-
-# The Kubernetes config file
-jo_kubeconfig: ~/k8s-config/config-rancher-desktop
