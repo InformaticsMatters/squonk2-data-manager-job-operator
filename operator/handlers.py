@@ -281,11 +281,11 @@ def create(name, namespace, spec, **_):
     # Has a projectTierFlavour been provided?
     # If so, we turn it into upper-case
     # (e.g. EVALUATION, BRONZE etc.)
-    project_tier_flavour: str = str(material.get("projectTierFlavour", "")).upper()
-    if project_tier_flavour:
-        logging.info("project_tier_flavour=%s", project_tier_flavour)
+    project_product_flavour: str = str(extras.get("projectProductFlavour", "")).upper()
+    if project_product_flavour:
+        logging.info("project_product_flavour=%s", project_product_flavour)
     else:
-        logging.info("project_tier_flavour=(not provided)")
+        logging.info("project_product_flavour=(not provided)")
 
     # ConfigMaps
     # ----------
@@ -467,7 +467,7 @@ def create(name, namespace, spec, **_):
     # Insert a pod priority class?
     if _APPLY_POD_PRIORITY_CLASS:
         priority_class_name: str = _TIER_FLAVOUR_PRIORITY_CLASSES.get(
-            project_tier_flavour,
+            project_product_flavour,
             _DEFAULT_POD_PRIORITY_CLASS,
         )
         pod["spec"]["priorityClassName"] = priority_class_name
