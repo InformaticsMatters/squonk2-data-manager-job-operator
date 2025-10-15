@@ -40,10 +40,21 @@ _NF_ANSI_LOG: str = os.environ.get("JO_NF_ANSI_LOG", "false")
 # Any value results in setting the Pod's Priority Class
 _APPLY_POD_PRIORITY_CLASS: Optional[str] = os.environ.get("JO_APPLY_POD_PRIORITY_CLASS")
 # If set and JO_APPLY_POD_PRIORITY_CLASS is set
-# this value will be used if now alternative is available.
+# this value will be used if no alternative is available.
+# Normally the Operator will select a class based on the 'product_tier'
+# provided in the Custom Resource.
 _DEFAULT_POD_PRIORITY_CLASS: str = os.environ.get(
     "JO_DEFAULT_POD_PRIORITY_CLASS", "im-worker-medium"
 )
+# The priority classes for jobs based on
+# the project tier 'flavour' passed in through the custom resource.
+# Used if JO_APPLY_POD_PRIORITY_CLASS is set
+_TIER_FLAVOUR_PRIORITY_CLASSES: dict[str, str] = {
+    "EVALUATION": "im-worker-low",
+    "BRONZE": "im-worker-medium",
+    "SILVER": "im-worker-high",
+    "GOLD": "im-worker-critical",
+}
 
 # Default CPU and MEM using Kubernetes units
 # (applies to default requests and limits)
@@ -140,7 +151,7 @@ def create(name, namespace, spec, **_):
 
     # All Data-Manager provided material
     # will be namespaced under the 'imDataManager' property
-    material: Dict[str, any] = spec.get("imDataManager", {})
+    material: Dict[str, Any] = spec.get("imDataManager", {})
     logging.info("material=%s (name=%s)", material, name)
 
     # 'imDataManagerExtras' is an undefined map of extra material
@@ -152,7 +163,7 @@ def create(name, namespace, spec, **_):
     # In this case if the key 'useInstanceDirectoryForProject' is set
     # the instance is to use the Instance directory as a mount point for the Project.
     # Prior to this the Project directory was used for the mount point.
-    extras: Dict[str, any] = spec.get("imDataManagerExtras", {})
+    extras: Dict[str, Any] = spec.get("imDataManagerExtras", {})
     logging.info("extras=%s (name=%s)", extras, name)
     use_instance_directory_for_project: bool = (
         True if "useInstanceDirectoryForProject" in extras else False
@@ -162,22 +173,22 @@ def create(name, namespace, spec, **_):
         use_instance_directory_for_project,
     )
 
-    image: str = material.get("image")
+    image: str = material.get("image", "")
     if not image:
         msg = "Material image is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
-    image_type: str = material.get("imageType")
+    image_type: str = material.get("imageType", "")
     if not image_type:
         msg = "Material imageType is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
-    command: str = material.get("command")
+    command: str = material.get("command", "")
     if not command:
         msg = "Material command is not defined"
         logging.error(msg)
         raise kopf.PermanentError(msg)
-    task_id: str = material.get("taskId")
+    task_id: str = material.get("taskId", "")
     if not task_id:
         msg = "Material taskId is not defined"
         logging.error(msg)
@@ -266,6 +277,15 @@ def create(name, namespace, spec, **_):
     )
     logging.info("project_mount_sub_path=%s", project_mount_sub_path)
     logging.info("nxf_work=%s", nxf_work)
+
+    # Has a projectTierFlavour been provided?
+    # If so, we turn it into upper-case
+    # (e.g. EVALUATION, BRONZE etc.)
+    project_tier_flavour: str = str(material.get("projectTierFlavour", "")).upper()
+    if project_tier_flavour:
+        logging.info("project_tier_flavour=%s", project_tier_flavour)
+    else:
+        logging.info("project_tier_flavour=(not provided)")
 
     # ConfigMaps
     # ----------
@@ -446,7 +466,11 @@ def create(name, namespace, spec, **_):
 
     # Insert a pod priority class?
     if _APPLY_POD_PRIORITY_CLASS:
-        pod["spec"]["priorityClassName"] = _DEFAULT_POD_PRIORITY_CLASS
+        priority_class_name: str = _TIER_FLAVOUR_PRIORITY_CLASSES.get(
+            project_tier_flavour,
+            _DEFAULT_POD_PRIORITY_CLASS,
+        )
+        pod["spec"]["priorityClassName"] = priority_class_name
 
     # Pull secret?
     if pull_secret:
