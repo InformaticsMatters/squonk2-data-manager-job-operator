@@ -20,4 +20,4 @@ services:
   operator:
     build:
       context: operator
-    image: informaticsmatters/data-manager-job-operator:${IMAGE_TAG:-33.0.0}
+    image: informaticsmatters/data-manager-job-operator:${IMAGE_TAG:-35.0.0}
