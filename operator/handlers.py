@@ -94,7 +94,7 @@ k8s {
   storageClaimName = '%(claim_name)s'
   storageMountPath = '%(project_mount)s'
   storageSubPath = '%(project_id)s'
-  workDir = '%(nxf_work)'
+  workDir = '%(nxf_work)s'
 }
 """
 
